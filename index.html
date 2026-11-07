@@ -92,7 +92,8 @@ body{
 }
 .tag small{display:block;font-family:var(--body);font-size:.62rem;letter-spacing:.06em;text-transform:uppercase;opacity:.75;margin-bottom:.1rem}
 .tag.real{background:var(--real);color:var(--bg)}
-.tag.guess{background:var(--guess);color:#1A0B06}
+.tag.guess{background:#FFFFFF;color:var(--bg)}
+.tag.guess small{color:#E0572B;opacity:1}
 .revealed .tag{opacity:1}
 
 /* Columna derecha */
@@ -118,7 +119,7 @@ header .intro .sub{color:#B5C7D6;font-size:.85em;margin-top:.2rem}
 
 .controls{display:grid;gap:.6rem;transition:margin-top .5s cubic-bezier(.3,.9,.3,1)}
 .box{
-  display:flex;align-items:center;min-height:3.6rem;border-radius:.8rem;
+  position:relative;display:flex;align-items:center;min-height:3.9rem;border-radius:.8rem;
   background:#EAF4FB;border:2px solid #FFFFFF;transition:box-shadow .2s;
   box-shadow:0 0 0 0 rgba(127,227,255,0);
 }
@@ -126,12 +127,12 @@ header .intro .sub{color:#B5C7D6;font-size:.85em;margin-top:.2rem}
 .box input{
   font-weight:900;
   flex:1;min-width:0;width:100%;border:0;outline:0;background:transparent;color:#0B1622;
-  font-family:var(--mono);font-weight:800;font-size:1.9rem;padding:.2rem .2rem .2rem .85rem;
+  font-family:var(--mono);font-weight:900;font-size:2.375rem;padding:.1rem 2.2rem;text-align:center;
   font-variant-numeric:tabular-nums;
 }
 .box input::placeholder{color:#9DB2C4}
 .box input:disabled{color:#0B1622;-webkit-text-fill-color:#0B1622;opacity:1}
-.box .pct{font-family:var(--mono);font-size:1.4rem;color:#4A6378;padding-right:.85rem}
+.box .pct{position:absolute;right:.85rem;top:50%;transform:translateY(-50%);font-family:var(--mono);font-size:1.4rem;color:#4A6378;pointer-events:none}
 .btn{
   width:100%;font-family:var(--display);font-weight:800;font-size:1.1rem;letter-spacing:.01em;cursor:pointer;
   min-height:3.3rem;padding:0 1rem;border-radius:.8rem;border:0;text-transform:none;
@@ -151,7 +152,7 @@ header .intro .sub{color:#B5C7D6;font-size:.85em;margin-top:.2rem}
 .hint{font-size:.85rem;color:var(--bad);margin:0}
 
 /* Resultado */
-.result{display:none;flex-direction:column;gap:.6rem;margin-top:.6rem}
+.result{display:none;flex-direction:column;gap:.6rem;margin-top:2.1rem} /* doble de espacio bajo Nuevo DESAFÍO */
 .revealed .btn-go{display:none}
 .card.white{padding-left:.25rem;padding-right:.25rem}
 .card.white b{white-space:nowrap}
@@ -345,8 +346,8 @@ header .intro .sub{color:#B5C7D6;font-size:.85em;margin-top:.2rem}
     // Etiquetas dentro del tubo: nunca tapan la otra línea ni la otra etiqueta.
     // La etiqueta del valor mayor va sobre su línea y la del menor, bajo la suya.
     // Si no cabe (cerca del borde), van lado a lado lejos de ambas líneas.
-    tagReal.querySelector('span').textContent = fmt(real)+'%';
-    tagGuess.querySelector('span').textContent = fmt(g)+'%';
+    tagReal.querySelector('span').textContent = real.toFixed(1).replace('.',',')+'%';
+    tagGuess.querySelector('span').textContent = g.toFixed(1).replace('.',',')+'%';
     const H = tube.clientHeight, m = 4;
     const th = Math.max(tagReal.offsetHeight, tagGuess.offsetHeight);
     const realIsHi = real >= g;
@@ -359,9 +360,10 @@ header .intro .sub{color:#B5C7D6;font-size:.85em;margin-top:.2rem}
       hiB = yHi - m - th; loB = yLo - m - th;
     } else if (yLo - m - th < 0 && yLo + m + th <= yHi - m && yHi + m + th <= H){ // abajo: ambas sobre su línea
       hiB = yHi + m; loB = yLo + m;
-    } else {                                              // lado a lado
-      side = true;
-      hiB = loB = (yLo - m - th >= 0) ? yLo - m - th : yHi + m;
+    } else if (yLo - m - 2*th - 2 >= 0){                  // apiladas bajo ambas líneas
+      hiB = yLo - m - th; loB = yLo - m - 2*th - 2;
+    } else {                                              // apiladas sobre ambas líneas
+      loB = yHi + m; hiB = yHi + m + th + 2;
     }
     hiTag.style.bottom = hiB+'px'; loTag.style.bottom = loB+'px';
     tagReal.style.left  = side ? '28%' : '50%';
