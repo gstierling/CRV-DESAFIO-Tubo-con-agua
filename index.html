@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0B1622">
+<title>¡Acierta el % y gana!</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;800&family=Manrope:wght@400;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+:root{
+  color-scheme:dark;
+  --bg:#0B1622; --bg2:#102031; --ink:#EAF4FB; --muted:#8AA3B8; --line:#22384D;
+  --water-hi:#7FE3FF; --water:#1FA8F0; --water-lo:#0A5FC2;
+  --glass:rgba(200,230,255,.6);
+  --guess:#FF7A59; --real:#FFFFFF;
+  --good:#3DDC97; --warn:#FFC857; --bad:#FF6B6B;
+  --display:"Unbounded","Arial Black",system-ui,sans-serif;
+  --body:"Manrope","Segoe UI",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+  --bw:1.5px; /* pared del tubo, delgada */
+}
+
+/* Escala: en vertical (celular) todo se mide por el ancho de la pantalla,
+   así llena el celular aunque el sitio ignore el viewport. */
+html{font-size:16px}
+@media (orientation:portrait){ html{font-size:4.3vw} }
+
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{
+  background:var(--bg);color:var(--ink);font-family:var(--body);
+  font-size:1rem;line-height:1.4;-webkit-text-size-adjust:100%;text-size-adjust:100%;
+  overflow:hidden;
+}
+
+/* Tubo a la izquierda, a todo el alto; todo lo demás a la derecha */
+.app{
+  height:100vh;height:100dvh;margin:0 auto;
+  display:grid;grid-template-columns:auto minmax(0,1fr);gap:1rem;
+  padding:calc(.9rem + env(safe-area-inset-top)) calc(1rem + env(safe-area-inset-right))
+          calc(.9rem + env(safe-area-inset-bottom)) calc(1rem + env(safe-area-inset-left));
+}
+@media (orientation:landscape){ .app{max-width:760px} }
+
+.slot{min-height:0;height:100%;display:flex;align-items:flex-start}
+.tube{
+  position:relative;width:80px;height:560px;border-radius:0;overflow:hidden;
+  border:var(--bw) solid var(--glass);
+  background:linear-gradient(90deg,rgba(255,255,255,.09),rgba(255,255,255,.02) 35%,rgba(255,255,255,.04) 70%,rgba(255,255,255,.10));
+  box-shadow:0 0 1.5rem rgba(127,227,255,.08), 0 1.5rem 3rem rgba(0,0,0,.5);
+}
+.tube::after{ /* brillo del vidrio */
+  content:"";position:absolute;top:0;bottom:0;left:14%;width:9%;z-index:3;pointer-events:none;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.32),transparent);
+}
+.tube::before{
+  content:"";position:absolute;top:0;bottom:0;right:9%;width:3%;z-index:3;pointer-events:none;
+  background:rgba(255,255,255,.10);
+}
+.water{
+  position:absolute;left:0;right:0;bottom:0;height:0%;z-index:1;
+  background:linear-gradient(90deg,var(--water-lo),var(--water) 40%,var(--water) 60%,var(--water-lo));
+  transition:height 1.1s cubic-bezier(.25,.9,.3,1);
+}
+.water::before{
+  content:"";position:absolute;left:0;right:0;top:0;height:.35rem;
+  background:linear-gradient(180deg,var(--water-hi),rgba(127,227,255,0));
+}
+.bubble{
+  position:absolute;bottom:-10px;border-radius:50%;
+  background:radial-gradient(circle at 35% 35%,rgba(255,255,255,.9),rgba(255,255,255,.15) 60%,transparent 70%);
+  animation:rise linear infinite;
+}
+@keyframes rise{
+  from{transform:translate(0,0);opacity:0}
+  10%{opacity:.8}
+  to{transform:translate(var(--dx),var(--dy));opacity:0}
+}
+.mark{position:absolute;left:0;right:0;height:0;z-index:2;opacity:0;transition:opacity .4s .3s}
+.mark.real{border-top:.2rem solid var(--real);box-shadow:0 0 .6rem rgba(255,255,255,.7)}
+.mark.guess{border-top:.2rem dashed var(--guess)}
+.revealed .mark{opacity:1}
+
+/* Etiquetas dentro del tubo (solo después de jugar) */
+.tag{
+  position:absolute;left:50%;z-index:4;transform:translateX(-50%);opacity:0;transition:opacity .4s .5s;
+  font-family:var(--mono);font-weight:700;font-size:.72rem;line-height:1;white-space:nowrap;
+  padding:.22rem .3rem;border-radius:.25rem;text-align:center;
+  box-shadow:0 .15rem .5rem rgba(0,0,0,.35);
+}
+.tag small{display:block;font-family:var(--body);font-size:.55rem;letter-spacing:.06em;text-transform:uppercase;opacity:.75;margin-bottom:.1rem}
+.tag.real{background:var(--real);color:var(--bg)}
+.tag.guess{background:var(--guess);color:#1A0B06}
+.revealed .tag{opacity:1}
+
+/* Columna derecha */
+.side{display:flex;flex-direction:column;gap:.9rem;min-width:0;min-height:0;overflow-y:auto}
+
+header h1{
+  font-family:var(--display);font-weight:800;font-size:1.45rem;line-height:1.08;
+  letter-spacing:-.01em;margin:0;text-wrap:balance;
+}
+header h1 em{font-style:normal;color:var(--water-hi)}
+header .intro{margin-top:.5rem;font-size:.8rem}
+header .intro p{margin:0;line-height:1.35}
+header .intro .q{color:var(--ink);font-weight:700;font-size:1em}
+header .intro .sub{color:var(--muted);font-size:.8em;margin-top:.2rem}
+.examples{
+  margin-top:.55rem;padding:.5rem .65rem;border-radius:.55rem;
+  background:rgba(127,227,255,.10);border:1px solid rgba(127,227,255,.35);
+  font-size:.82rem;font-weight:700;color:var(--ink);
+}
+.examples b{font-family:var(--mono);font-weight:700;color:var(--water-hi)}
+.examples i{font-style:normal;font-weight:800;color:var(--guess);margin:0 .35em}
+
+.controls{display:grid;gap:.6rem;transition:margin-top .5s cubic-bezier(.3,.9,.3,1)}
+.box{
+  display:flex;align-items:center;min-height:3.6rem;border-radius:.8rem;
+  background:var(--bg2);border:2px solid var(--line);transition:border-color .2s;
+}
+.box:focus-within{border-color:var(--water)}
+.box input{
+  flex:1;min-width:0;width:100%;border:0;outline:0;background:transparent;color:var(--ink);
+  font-family:var(--mono);font-weight:700;font-size:1.9rem;padding:.2rem .2rem .2rem .85rem;
+  font-variant-numeric:tabular-nums;
+}
+.box input::placeholder{color:#3B566E}
+.box .pct{font-family:var(--mono);font-size:1.4rem;color:var(--muted);padding-right:.85rem}
+.btn{
+  width:100%;font-family:var(--display);font-weight:600;font-size:.95rem;letter-spacing:.01em;cursor:pointer;
+  min-height:3.3rem;padding:0 1rem;border-radius:.8rem;border:0;text-transform:none;
+  touch-action:manipulation;-webkit-tap-highlight-color:transparent;transition:transform .1s,opacity .2s;
+}
+.btn:active{transform:scale(.97)}
+.btn:focus-visible{outline:3px solid var(--water-hi);outline-offset:3px}
+.btn:disabled{opacity:.3;cursor:not-allowed}
+.btn-go{background:var(--ink);color:var(--bg)}
+.btn-new{
+  color:#04101C;background:linear-gradient(90deg,var(--water-hi),var(--water));
+  box-shadow:0 .4rem 1.3rem rgba(31,168,240,.35);
+}
+.btn-new.pulse{animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{50%{box-shadow:0 .4rem 2rem rgba(127,227,255,.8)}}
+.hint:empty{display:none}
+.hint{font-size:.75rem;color:var(--bad);margin:0}
+
+/* Resultado */
+.result{display:none;flex-direction:column;gap:.6rem}
+.revealed .result{display:flex;animation:fadeIn .5s .3s both}
+@keyframes fadeIn{from{opacity:0;transform:translateY(.6rem)}to{opacity:1;transform:none}}
+.verdict{font-family:var(--display);font-weight:800;font-size:1.1rem;line-height:1.1;margin:0;color:var(--sev)}
+.nums{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.55rem .7rem}
+.metric{border-top:1px solid var(--line);padding-top:.35rem}
+.metric span{display:block;font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.metric b{font-family:var(--mono);font-weight:700;font-size:1.3rem;line-height:1.15;font-variant-numeric:tabular-nums}
+.metric b small{font-size:.55em;font-weight:500;margin-left:.1rem;color:var(--muted)}
+.metric.err{grid-column:1/-1}
+.metric.err b{color:var(--sev);font-size:2.1rem}
+.note,.avg{font-size:.65rem;color:var(--muted);margin:0}
+.avg b{font-family:var(--mono);color:var(--ink)}
+
+@media (prefers-reduced-motion:reduce){
+  .water,.mark,.tag{transition:none}
+  .bubble{display:none}
+  .btn-new.pulse,.revealed .result{animation:none}
+}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <div class="slot" id="slot">
+    <div class="tube" id="tube" aria-label="Tubo con agua">
+      <div class="water" id="water"></div>
+      <div class="mark real" id="markReal"></div>
+      <div class="mark guess" id="markGuess"></div>
+      <div class="tag real" id="tagReal"><small>Real</small><span></span></div>
+      <div class="tag guess" id="tagGuess"><small>Tú</small><span></span></div>
+    </div>
+  </div>
+
+  <div class="side">
+    <header>
+      <h1>¡Acierta el <em>%</em> y gana!</h1>
+      <div class="intro" id="intro"><p class="q">¿Qué porcentaje del tubo está lleno?</p><p class="sub">Números redondos o terminados en ,5.</p></div>
+      <div class="examples">Ejemplos: <b>32</b><i>/</i><b>73,5</b><i>/</i><b>8</b><i>/</i><b>29,5</b></div>
+    </header>
+
+    <form class="controls" id="form" novalidate>
+      <label class="box" for="guess">
+        <input id="guess" type="text" inputmode="decimal" maxlength="4" size="4" placeholder="00" autocomplete="off" enterkeyhint="go" aria-label="Tu estimación en porcentaje">
+        <span class="pct">%</span>
+      </label>
+      <p class="hint" id="hint" role="alert"></p>
+      <button class="btn btn-go" id="btnGo" type="submit">Ingresar</button>
+      <button class="btn btn-new" id="btnNew" type="button">Nuevo DESAFÍO</button>
+    </form>
+
+    <div class="result" id="result" aria-live="polite">
+      <p class="verdict" id="verdict"></p>
+      <div class="nums">
+        <div class="metric err"><span>Error</span><b id="rErr"></b></div>
+        <div class="metric"><span>Tu estimación</span><b id="rGuess"></b></div>
+        <div class="metric"><span>Real</span><b id="rReal"></b></div>
+        <div class="metric"><span>Diferencia</span><b id="rDiff"></b></div>
+      </div>
+      <p class="note">Error = |estimación − real| ÷ real × 100</p>
+      <p class="avg" id="avg"></p>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const app=$('app'), slot=$('slot'), tube=$('tube'), water=$('water');
+  const mReal=$('markReal'), mGuess=$('markGuess'), tagReal=$('tagReal'), tagGuess=$('tagGuess');
+  const guess=$('guess'), hint=$('hint'), btnGo=$('btnGo'), btnNew=$('btnNew');
+  const finePointer = matchMedia('(pointer:fine)').matches;
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let real=null, answered=false; const errs=[];
+
+  const fmt = x => (Number.isInteger(x) ? String(x) : x.toFixed(1)).replace('.',',');
+
+  // Tubo lo más largo posible (todo el alto), con alto = 7 × ancho
+  function fitTube(){
+    const h = Math.max(200, slot.clientHeight);
+    tube.style.height = h+'px';
+    tube.style.width = (h/7)+'px';
+  }
+  if (window.ResizeObserver) new ResizeObserver(fitTube).observe(slot);
+  addEventListener('resize', fitTube);
+  fitTube();
+
+  function bubbles(){
+    water.querySelectorAll('.bubble').forEach(b=>b.remove());
+    if (reduce) return;
+    const w = tube.clientWidth, hWater = tube.clientHeight*real/100;
+    const count = Math.max(2, Math.round(hWater/45));
+    for(let i=0;i<count;i++){
+      const b=document.createElement('i'); b.className='bubble';
+      const s = 3 + Math.random()*6;
+      b.style.width=b.style.height=s+'px';
+      b.style.left=(8+Math.random()*(w-16-s))+'px';
+      b.style.setProperty('--dx',(Math.random()*10-5)+'px');
+      b.style.setProperty('--dy',(-hWater)+'px');
+      b.style.animationDuration=(2.5+Math.random()*4)+'s';
+      b.style.animationDelay=(Math.random()*5)+'s';
+      water.appendChild(b);
+    }
+  }
+
+  // Cambia la posición de los elementos de la derecha en cada desafío,
+  // para que no sirvan de referencia de altura
+  const intro=$('intro'), form=$('form');
+  function shuffleRefs(){
+    intro.style.fontSize = (0.7 + Math.random()*0.24).toFixed(3)+'rem';   // 0,70 a 0,94 rem
+    form.style.marginTop = (Math.random()*7).toFixed(2)+'rem';          // baja entre 0 y 7 rem
+  }
+
+  function newChallenge(){
+    shuffleRefs();
+    real = (Math.floor(Math.random()*197)+2)/2; // 1 a 99,5 en pasos de 0,5
+    answered=false;
+    app.classList.remove('revealed');
+    hint.textContent=''; guess.value=''; guess.disabled=false; btnGo.disabled=false;
+    btnNew.classList.remove('pulse');
+    water.style.transition='none'; water.style.height='0%';
+    void water.offsetHeight; water.style.transition='';
+    requestAnimationFrame(()=>{ water.style.height=real+'%'; });
+    setTimeout(bubbles, 50);
+    if (finePointer) guess.focus({preventScroll:true});
+  }
+
+  function sev(err){
+    if(err<=5)  return ['var(--good)','¡Ojo de águila!'];
+    if(err<=15) return ['var(--warn)','Bastante cerca'];
+    return ['var(--bad)','Lejos esta vez'];
+  }
+
+  // Solo números y un decimal
+  guess.addEventListener('input', ()=>{
+    let v = guess.value.replace('.',',').replace(/[^\d,]/g,'');
+    const i = v.indexOf(',');
+    if (i>=0) v = v.slice(0,i+1) + v.slice(i+1).replace(/,/g,'').slice(0,1);
+    guess.value = v;
+  });
+
+  $('form').addEventListener('submit', e=>{
+    e.preventDefault();
+    if (real===null || answered) return;
+    const raw = guess.value.trim().replace(',','.');
+    const g = Number(raw);
+    if (raw==='' || !isFinite(g) || g<1 || g>100 || !Number.isInteger(g*2)){
+      hint.textContent='Usa un número del 1 al 100, entero o terminado en ,5 (ej.: 73,5).';
+      return;
+    }
+    hint.textContent=''; answered=true; guess.blur();
+
+    const diff = Math.abs(g-real), err = diff/real*100;
+    const [color,label] = sev(err);
+    app.style.setProperty('--sev',color);
+
+    mReal.style.bottom = real+'%'; mGuess.style.bottom = g+'%';
+    // Etiquetas dentro del tubo: nunca tapan la otra línea ni la otra etiqueta.
+    // La etiqueta del valor mayor va sobre su línea y la del menor, bajo la suya.
+    // Si no cabe (cerca del borde), van lado a lado lejos de ambas líneas.
+    tagReal.querySelector('span').textContent = fmt(real)+'%';
+    tagGuess.querySelector('span').textContent = fmt(g)+'%';
+    const H = tube.clientHeight, m = 4;
+    const th = Math.max(tagReal.offsetHeight, tagGuess.offsetHeight);
+    const realIsHi = real >= g;
+    const hiTag = realIsHi ? tagReal : tagGuess, loTag = realIsHi ? tagGuess : tagReal;
+    const yHi = H*Math.max(real,g)/100, yLo = H*Math.min(real,g)/100;
+    let hiB, loB, side = false;
+    if (yHi + m + th <= H && yLo - m - th >= 0){          // caso normal
+      hiB = yHi + m; loB = yLo - m - th;
+    } else if (yHi + m + th > H && yHi - m - th >= yLo + m && yLo - m - th >= 0){ // arriba: ambas bajo su línea
+      hiB = yHi - m - th; loB = yLo - m - th;
+    } else if (yLo - m - th < 0 && yLo + m + th <= yHi - m && yHi + m + th <= H){ // abajo: ambas sobre su línea
+      hiB = yHi + m; loB = yLo + m;
+    } else {                                              // lado a lado
+      side = true;
+      hiB = loB = (yLo - m - th >= 0) ? yLo - m - th : yHi + m;
+    }
+    hiTag.style.bottom = hiB+'px'; loTag.style.bottom = loB+'px';
+    tagReal.style.left  = side ? '28%' : '50%';
+    tagGuess.style.left = side ? '72%' : '50%';
+
+    $('verdict').textContent = label;
+    $('rErr').textContent = fmt(Math.round(err*10)/10)+'%';
+    $('rGuess').textContent = fmt(g)+'%';
+    $('rReal').textContent = fmt(real)+'%';
+    const sign = g>real ? '+' : g<real ? '−' : '';
+    $('rDiff').innerHTML = sign+fmt(diff)+'<small>pts</small>';
+
+    errs.push(err);
+    const avg = errs.reduce((s,x)=>s+x,0)/errs.length;
+    $('avg').innerHTML = errs.length>1 ? 'Error promedio de tus jugadas: <b>'+fmt(Math.round(avg*10)/10)+'%</b>' : '';
+
+    app.classList.add('revealed');
+    guess.disabled=true; btnGo.disabled=true;
+    btnNew.classList.add('pulse');
+  });
+
+  btnNew.addEventListener('click', newChallenge);
+  newChallenge();
+})();
+</script>
+</body>
+</html>
