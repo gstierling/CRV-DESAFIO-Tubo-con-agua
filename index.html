@@ -151,7 +151,10 @@ header .intro .sub{color:#B5C7D6;font-size:.85em;margin-top:.2rem}
 .hint{font-size:.85rem;color:var(--bad);margin:0}
 
 /* Resultado */
-.result{display:none;flex-direction:column;gap:.6rem}
+.result{display:none;flex-direction:column;gap:.6rem;margin-top:.6rem}
+.revealed .btn-go{display:none}
+.card.white{padding-left:.25rem;padding-right:.25rem}
+.card.white b{white-space:nowrap}
 .revealed .result{display:flex;animation:fadeIn .5s .3s both}
 @keyframes fadeIn{from{opacity:0;transform:translateY(.6rem)}to{opacity:1;transform:none}}
 .verdict{font-family:var(--display);font-weight:900;font-size:1.35rem;line-height:1.1;margin:0;color:var(--sev);text-align:center}
@@ -309,6 +312,7 @@ header .intro .sub{color:#B5C7D6;font-size:.85em;margin-top:.2rem}
 
   // Mensaje según la falla en puntos porcentuales
   function sev(err){
+    if(err===0) return ['var(--good)','¡EXACTO!'];
     if(err<=2)  return ['var(--good)','¡Ojo de águila!'];
     if(err<=6)  return ['var(--warn)','¡Bastante cerca!'];
     return ['var(--bad)','¡Lejos esta vez!'];
@@ -365,10 +369,18 @@ header .intro .sub{color:#B5C7D6;font-size:.85em;margin-top:.2rem}
 
     $('verdict').textContent = label;
     $('rErr').textContent = (g>real ? '+' : g<real ? '−' : '') + fmt(diff)+'%';
-    $('rGuess').textContent = fmt(g)+'%';
-    $('rReal').textContent = fmt(real)+'%';
+    // Tu y Real siempre con un decimal (ej.: 40,0%)
+    const f1 = x => x.toFixed(1).replace('.',',')+'%';
+    [['rGuess',g],['rReal',real]].forEach(([id,v])=>{
+      const el=$(id); el.textContent=f1(v); el.style.fontSize='';
+    });
 
     app.classList.add('revealed');
+    // Achica la cifra si no cabe en su caja
+    ['rGuess','rReal'].forEach(id=>{
+      const el=$(id); let fs=parseFloat(getComputedStyle(el).fontSize);
+      while (el.scrollWidth > el.clientWidth && fs > 10){ fs -= 1; el.style.fontSize = fs+'px'; }
+    });
     fitSide();
     guess.disabled=true; btnGo.disabled=true;
     btnNew.classList.add('pulse');
