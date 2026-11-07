@@ -7,7 +7,7 @@
 <title>¡Acierta el % y gana!</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;800&family=Manrope:wght@400;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&display=swap">
 <style>
 :root{
   color-scheme:dark;
@@ -16,9 +16,9 @@
   --glass:rgba(200,230,255,.6);
   --guess:#FF7A59; --real:#FFFFFF;
   --good:#3DDC97; --warn:#FFC857; --bad:#FF6B6B;
-  --display:"Unbounded","Arial Black",system-ui,sans-serif;
-  --body:"Manrope","Segoe UI",system-ui,sans-serif;
-  --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+  --display:"Nunito","Segoe UI",system-ui,sans-serif;
+  --body:"Nunito","Segoe UI",system-ui,sans-serif;
+  --mono:"Nunito","Segoe UI",system-ui,sans-serif;
   --bw:1.5px; /* pared del tubo, delgada */
 }
 
@@ -31,7 +31,7 @@ html{font-size:16px}
 html,body{height:100%;margin:0}
 body{
   background:var(--bg);color:var(--ink);font-family:var(--body);
-  font-size:1rem;line-height:1.4;-webkit-text-size-adjust:100%;text-size-adjust:100%;
+  font-size:1rem;font-weight:800;line-height:1.4;font-variant-numeric:tabular-nums;-webkit-text-size-adjust:100%;text-size-adjust:100%;
   overflow:hidden;
 }
 
@@ -86,11 +86,11 @@ body{
 /* Etiquetas dentro del tubo (solo después de jugar) */
 .tag{
   position:absolute;left:50%;z-index:4;transform:translateX(-50%);opacity:0;transition:opacity .4s .5s;
-  font-family:var(--mono);font-weight:700;font-size:.72rem;line-height:1;white-space:nowrap;
+  font-family:var(--mono);font-weight:900;font-size:.85rem;line-height:1;white-space:nowrap;
   padding:.22rem .3rem;border-radius:.25rem;text-align:center;
   box-shadow:0 .15rem .5rem rgba(0,0,0,.35);
 }
-.tag small{display:block;font-family:var(--body);font-size:.55rem;letter-spacing:.06em;text-transform:uppercase;opacity:.75;margin-bottom:.1rem}
+.tag small{display:block;font-family:var(--body);font-size:.62rem;letter-spacing:.06em;text-transform:uppercase;opacity:.75;margin-bottom:.1rem}
 .tag.real{background:var(--real);color:var(--bg)}
 .tag.guess{background:var(--guess);color:#1A0B06}
 .revealed .tag{opacity:1}
@@ -99,20 +99,20 @@ body{
 .side{display:flex;flex-direction:column;gap:.9rem;min-width:0;min-height:0;overflow-y:auto}
 
 header h1{
-  font-family:var(--display);font-weight:800;font-size:1.45rem;line-height:1.08;
+  font-family:var(--display);font-weight:900;font-size:1.6rem;line-height:1.08;
   letter-spacing:-.01em;margin:0;text-wrap:balance;
 }
 header h1 em{font-style:normal;color:var(--water-hi)}
-header .intro{margin-top:.5rem;font-size:.8rem}
+header .intro{margin-top:.5rem;font-size:.95rem}
 header .intro p{margin:0;line-height:1.35}
-header .intro .q{color:var(--ink);font-weight:700;font-size:1em}
-header .intro .sub{color:var(--muted);font-size:.8em;margin-top:.2rem}
+header .intro .q{color:var(--ink);font-weight:800;font-size:1em}
+header .intro .sub{color:#B5C7D6;font-size:.85em;margin-top:.2rem}
 .examples{
   margin-top:.55rem;padding:.5rem .65rem;border-radius:.55rem;
   background:rgba(127,227,255,.10);border:1px solid rgba(127,227,255,.35);
-  font-size:.82rem;font-weight:700;color:var(--ink);
+  font-size:.95rem;font-weight:900;color:var(--ink);
 }
-.examples b{font-family:var(--mono);font-weight:700;color:var(--water-hi)}
+.examples b{font-family:var(--mono);font-weight:800;color:var(--water-hi)}
 .examples i{font-style:normal;font-weight:800;color:var(--guess);margin:0 .35em}
 
 .controls{display:grid;gap:.6rem;transition:margin-top .5s cubic-bezier(.3,.9,.3,1)}
@@ -123,22 +123,23 @@ header .intro .sub{color:var(--muted);font-size:.8em;margin-top:.2rem}
 }
 .box:focus-within{box-shadow:0 0 0 .2rem var(--water-hi)}
 .box input{
+  font-weight:900;
   flex:1;min-width:0;width:100%;border:0;outline:0;background:transparent;color:#0B1622;
-  font-family:var(--mono);font-weight:700;font-size:1.9rem;padding:.2rem .2rem .2rem .85rem;
+  font-family:var(--mono);font-weight:800;font-size:1.9rem;padding:.2rem .2rem .2rem .85rem;
   font-variant-numeric:tabular-nums;
 }
 .box input::placeholder{color:#9DB2C4}
 .box input:disabled{color:#0B1622;-webkit-text-fill-color:#0B1622;opacity:1}
 .box .pct{font-family:var(--mono);font-size:1.4rem;color:#4A6378;padding-right:.85rem}
 .btn{
-  width:100%;font-family:var(--display);font-weight:600;font-size:.95rem;letter-spacing:.01em;cursor:pointer;
+  width:100%;font-family:var(--display);font-weight:800;font-size:1.1rem;letter-spacing:.01em;cursor:pointer;
   min-height:3.3rem;padding:0 1rem;border-radius:.8rem;border:0;text-transform:none;
   touch-action:manipulation;-webkit-tap-highlight-color:transparent;transition:transform .1s,opacity .2s;
 }
 .btn:active{transform:scale(.97)}
 .btn:focus-visible{outline:3px solid var(--water-hi);outline-offset:3px}
 .btn:disabled{opacity:.3;cursor:not-allowed}
-.btn-go{background:#22C55E;color:#04210F;font-size:1.15rem;font-weight:800;box-shadow:0 .4rem 1.2rem rgba(34,197,94,.3)}
+.btn-go{background:#22C55E;color:#04210F;font-size:1.3rem;font-weight:900;box-shadow:0 .4rem 1.2rem rgba(34,197,94,.3)}
 .btn-new{
   color:#FFFFFF;background:#E53935;
   box-shadow:0 .4rem 1.3rem rgba(229,57,53,.35);
@@ -146,22 +147,32 @@ header .intro .sub{color:var(--muted);font-size:.8em;margin-top:.2rem}
 .btn-new.pulse{animation:pulse 1.6s ease-in-out infinite}
 @keyframes pulse{50%{box-shadow:0 .4rem 2rem rgba(255,90,85,.85)}}
 .hint:empty{display:none}
-.hint{font-size:.75rem;color:var(--bad);margin:0}
+.hint{font-size:.85rem;color:var(--bad);margin:0}
 
 /* Resultado */
 .result{display:none;flex-direction:column;gap:.6rem}
 .revealed .result{display:flex;animation:fadeIn .5s .3s both}
 @keyframes fadeIn{from{opacity:0;transform:translateY(.6rem)}to{opacity:1;transform:none}}
-.verdict{font-family:var(--display);font-weight:800;font-size:1.2rem;line-height:1.1;margin:0;color:var(--sev);text-align:center}
+.verdict{font-family:var(--display);font-weight:900;font-size:1.35rem;line-height:1.1;margin:0;color:var(--sev);text-align:center}
 .cards{display:flex;flex-direction:column;align-items:center;gap:.55rem}
 .card{
-  width:100%;text-align:center;padding:.55rem .6rem .6rem;border-radius:.8rem;
+  width:100%;text-align:center;padding:.4rem .6rem .45rem;border-radius:.8rem;
   background:var(--bg2);border:1px solid var(--line);
 }
-.card span{display:block;font-size:.72rem;font-weight:700;color:var(--muted);letter-spacing:.03em}
-.card b{display:block;font-family:var(--mono);font-weight:700;font-size:1.7rem;line-height:1.15;font-variant-numeric:tabular-nums}
+.card span{display:block;font-size:.9rem;font-weight:800;color:var(--muted);letter-spacing:.03em}
+.card b{display:block;font-family:var(--mono);font-weight:800;font-size:1.9rem;font-weight:900;line-height:1.1;font-variant-numeric:tabular-nums}
 .card.miss{border-color:var(--sev)}
 .card.miss b{color:var(--sev)}
+
+.side.tight{gap:.55rem}
+.side.tight .cards{gap:.35rem}
+.side.tight .card{padding:.2rem .5rem .25rem}
+.side.tight .card b{font-size:1.55rem}
+.side.tight .card span{font-size:.8rem}
+.side.tight .verdict{font-size:1.15rem}
+.side.tight .controls{gap:.45rem}
+.side.tight .btn{min-height:2.9rem}
+.side.tight .box{min-height:3.1rem}
 
 @media (prefers-reduced-motion:reduce){
   .water,.mark,.tag{transition:none}
@@ -254,15 +265,32 @@ header .intro .sub{color:var(--muted);font-size:.8em;margin-top:.2rem}
   // para que no sirvan de referencia de altura
   const intro=$('intro'), form=$('form');
   function shuffleRefs(){
-    intro.style.fontSize = (0.7 + Math.random()*0.24).toFixed(3)+'rem';   // 0,70 a 0,94 rem
+    intro.style.fontSize = (0.85 + Math.random()*0.24).toFixed(3)+'rem';   // 0,85 a 1,09 rem
     form.style.marginTop = (Math.random()*7).toFixed(2)+'rem';          // baja entre 0 y 7 rem
   }
+
+  // Si el resultado no cabe, sube el bloque de controles lo necesario
+  const side = document.querySelector('.side');
+  function fitSide(){
+    const over = side.scrollHeight - side.clientHeight;
+    if (over > 0){
+      const cur = parseFloat(getComputedStyle(form).marginTop) || 0;
+      form.style.transition = 'none';
+      form.style.marginTop = Math.max(0, cur - over) + 'px';
+      void form.offsetHeight; form.style.transition = '';
+    }
+    if (side.scrollHeight > side.clientHeight) side.classList.add('tight');   // compacta si aún no cabe
+    if (side.scrollHeight > side.clientHeight) side.scrollTop = side.scrollHeight; // último recurso
+
+  }
+  addEventListener('resize', ()=>{ if (app.classList.contains('revealed')) fitSide(); });
 
   function newChallenge(){
     shuffleRefs();
     real = (Math.floor(Math.random()*197)+2)/2; // 1 a 99,5 en pasos de 0,5
     answered=false;
     app.classList.remove('revealed');
+    side.classList.remove('tight'); side.scrollTop = 0;
     hint.textContent=''; guess.value=''; guess.disabled=false; btnGo.disabled=false;
     btnNew.classList.remove('pulse');
     water.style.transition='none'; water.style.height='0%';
@@ -333,6 +361,7 @@ header .intro .sub{color:var(--muted);font-size:.8em;margin-top:.2rem}
     $('rReal').textContent = fmt(real)+'%';
 
     app.classList.add('revealed');
+    fitSide();
     guess.disabled=true; btnGo.disabled=true;
     btnNew.classList.add('pulse');
   });
