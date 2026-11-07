@@ -118,16 +118,18 @@ header .intro .sub{color:var(--muted);font-size:.8em;margin-top:.2rem}
 .controls{display:grid;gap:.6rem;transition:margin-top .5s cubic-bezier(.3,.9,.3,1)}
 .box{
   display:flex;align-items:center;min-height:3.6rem;border-radius:.8rem;
-  background:var(--bg2);border:2px solid var(--line);transition:border-color .2s;
+  background:#EAF4FB;border:2px solid #FFFFFF;transition:box-shadow .2s;
+  box-shadow:0 0 0 0 rgba(127,227,255,0);
 }
-.box:focus-within{border-color:var(--water)}
+.box:focus-within{box-shadow:0 0 0 .2rem var(--water-hi)}
 .box input{
-  flex:1;min-width:0;width:100%;border:0;outline:0;background:transparent;color:var(--ink);
+  flex:1;min-width:0;width:100%;border:0;outline:0;background:transparent;color:#0B1622;
   font-family:var(--mono);font-weight:700;font-size:1.9rem;padding:.2rem .2rem .2rem .85rem;
   font-variant-numeric:tabular-nums;
 }
-.box input::placeholder{color:#3B566E}
-.box .pct{font-family:var(--mono);font-size:1.4rem;color:var(--muted);padding-right:.85rem}
+.box input::placeholder{color:#9DB2C4}
+.box input:disabled{color:#0B1622;-webkit-text-fill-color:#0B1622;opacity:1}
+.box .pct{font-family:var(--mono);font-size:1.4rem;color:#4A6378;padding-right:.85rem}
 .btn{
   width:100%;font-family:var(--display);font-weight:600;font-size:.95rem;letter-spacing:.01em;cursor:pointer;
   min-height:3.3rem;padding:0 1rem;border-radius:.8rem;border:0;text-transform:none;
@@ -136,13 +138,13 @@ header .intro .sub{color:var(--muted);font-size:.8em;margin-top:.2rem}
 .btn:active{transform:scale(.97)}
 .btn:focus-visible{outline:3px solid var(--water-hi);outline-offset:3px}
 .btn:disabled{opacity:.3;cursor:not-allowed}
-.btn-go{background:var(--ink);color:var(--bg)}
+.btn-go{background:#22C55E;color:#04210F;font-size:1.15rem;font-weight:800;box-shadow:0 .4rem 1.2rem rgba(34,197,94,.3)}
 .btn-new{
-  color:#04101C;background:linear-gradient(90deg,var(--water-hi),var(--water));
-  box-shadow:0 .4rem 1.3rem rgba(31,168,240,.35);
+  color:#FFFFFF;background:#E53935;
+  box-shadow:0 .4rem 1.3rem rgba(229,57,53,.35);
 }
 .btn-new.pulse{animation:pulse 1.6s ease-in-out infinite}
-@keyframes pulse{50%{box-shadow:0 .4rem 2rem rgba(127,227,255,.8)}}
+@keyframes pulse{50%{box-shadow:0 .4rem 2rem rgba(255,90,85,.85)}}
 .hint:empty{display:none}
 .hint{font-size:.75rem;color:var(--bad);margin:0}
 
@@ -150,16 +152,16 @@ header .intro .sub{color:var(--muted);font-size:.8em;margin-top:.2rem}
 .result{display:none;flex-direction:column;gap:.6rem}
 .revealed .result{display:flex;animation:fadeIn .5s .3s both}
 @keyframes fadeIn{from{opacity:0;transform:translateY(.6rem)}to{opacity:1;transform:none}}
-.verdict{font-family:var(--display);font-weight:800;font-size:1.1rem;line-height:1.1;margin:0;color:var(--sev)}
-.nums{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.55rem .7rem}
-.metric{border-top:1px solid var(--line);padding-top:.35rem}
-.metric span{display:block;font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
-.metric b{font-family:var(--mono);font-weight:700;font-size:1.3rem;line-height:1.15;font-variant-numeric:tabular-nums}
-.metric b small{font-size:.55em;font-weight:500;margin-left:.1rem;color:var(--muted)}
-.metric.err{grid-column:1/-1}
-.metric.err b{color:var(--sev);font-size:2.1rem}
-.note,.avg{font-size:.65rem;color:var(--muted);margin:0}
-.avg b{font-family:var(--mono);color:var(--ink)}
+.verdict{font-family:var(--display);font-weight:800;font-size:1.2rem;line-height:1.1;margin:0;color:var(--sev);text-align:center}
+.cards{display:flex;flex-direction:column;align-items:center;gap:.55rem}
+.card{
+  width:100%;text-align:center;padding:.55rem .6rem .6rem;border-radius:.8rem;
+  background:var(--bg2);border:1px solid var(--line);
+}
+.card span{display:block;font-size:.72rem;font-weight:700;color:var(--muted);letter-spacing:.03em}
+.card b{display:block;font-family:var(--mono);font-weight:700;font-size:1.7rem;line-height:1.15;font-variant-numeric:tabular-nums}
+.card.miss{border-color:var(--sev)}
+.card.miss b{color:var(--sev)}
 
 @media (prefers-reduced-motion:reduce){
   .water,.mark,.tag{transition:none}
@@ -199,14 +201,11 @@ header .intro .sub{color:var(--muted);font-size:.8em;margin-top:.2rem}
 
     <div class="result" id="result" aria-live="polite">
       <p class="verdict" id="verdict"></p>
-      <div class="nums">
-        <div class="metric err"><span>Error</span><b id="rErr"></b></div>
-        <div class="metric"><span>Tu estimación</span><b id="rGuess"></b></div>
-        <div class="metric"><span>Real</span><b id="rReal"></b></div>
-        <div class="metric"><span>Diferencia</span><b id="rDiff"></b></div>
+      <div class="cards">
+        <div class="card"><span>Tu estimación</span><b id="rGuess"></b></div>
+        <div class="card"><span>Real</span><b id="rReal"></b></div>
+        <div class="card miss"><span>Fallaste por</span><b id="rErr"></b></div>
       </div>
-      <p class="note">Error = |estimación − real| ÷ real × 100</p>
-      <p class="avg" id="avg"></p>
     </div>
   </div>
 </div>
@@ -219,7 +218,7 @@ header .intro .sub{color:var(--muted);font-size:.8em;margin-top:.2rem}
   const guess=$('guess'), hint=$('hint'), btnGo=$('btnGo'), btnNew=$('btnNew');
   const finePointer = matchMedia('(pointer:fine)').matches;
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  let real=null, answered=false; const errs=[];
+  let real=null, answered=false;
 
   const fmt = x => (Number.isInteger(x) ? String(x) : x.toFixed(1)).replace('.',',');
 
@@ -275,8 +274,8 @@ header .intro .sub{color:var(--muted);font-size:.8em;margin-top:.2rem}
 
   function sev(err){
     if(err<=5)  return ['var(--good)','¡Ojo de águila!'];
-    if(err<=15) return ['var(--warn)','Bastante cerca'];
-    return ['var(--bad)','Lejos esta vez'];
+    if(err<=15) return ['var(--warn)','¡Bastante cerca!'];
+    return ['var(--bad)','¡Lejos esta vez!'];
   }
 
   // Solo números y un decimal
@@ -332,12 +331,6 @@ header .intro .sub{color:var(--muted);font-size:.8em;margin-top:.2rem}
     $('rErr').textContent = fmt(Math.round(err*10)/10)+'%';
     $('rGuess').textContent = fmt(g)+'%';
     $('rReal').textContent = fmt(real)+'%';
-    const sign = g>real ? '+' : g<real ? '−' : '';
-    $('rDiff').innerHTML = sign+fmt(diff)+'<small>pts</small>';
-
-    errs.push(err);
-    const avg = errs.reduce((s,x)=>s+x,0)/errs.length;
-    $('avg').innerHTML = errs.length>1 ? 'Error promedio de tus jugadas: <b>'+fmt(Math.round(avg*10)/10)+'%</b>' : '';
 
     app.classList.add('revealed');
     guess.disabled=true; btnGo.disabled=true;
