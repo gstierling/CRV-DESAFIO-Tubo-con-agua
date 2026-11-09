@@ -76,7 +76,10 @@ header h1 em{font-style:normal;color:var(--water-hi)}
 header .intro{margin-top:.5rem;font-size:.95rem;text-align:center}
 header .intro p{margin:0;line-height:1.3}
 header .intro .q{color:var(--ink);font-weight:800}
-header .intro .sub{color:#B5C7D6;font-size:.85em;margin-top:.2rem}
+header .intro .sub{display:inline-block;margin-top:.45rem;padding:.25em .8em;border-radius:2rem;
+  background:#FFC857;color:#1A1200;font-weight:900;font-size:1em;line-height:1.2;box-shadow:0 0 1rem rgba(255,200,87,.35)}
+header .intro .sub b{font-size:1.3em;font-weight:900}
+header .intro .sub small{font-size:.8em;font-weight:800}
 .examples{
   margin-top:.55rem;padding:.5rem .65rem;border-radius:.55rem;
   background:rgba(127,227,255,.10);border:1px solid rgba(127,227,255,.35);
@@ -227,14 +230,14 @@ header .intro .sub{color:#B5C7D6;font-size:.85em;margin-top:.2rem}
       <h1>¡Acierta el <em>%</em> y gana!</h1>
       <div class="intro" id="intro">
         <p class="q" id="question">¿Qué porcentaje del tubo está lleno?</p>
-        <p class="sub" id="precText">Precisión: 0,5</p>
+        <p class="sub" id="precText">Precisión: <b>0,5</b></p>
       </div>
       <div class="examples">Ejemplos:<div class="nums" id="examples"></div></div>
     </header>
 
     <form class="controls" id="form" novalidate>
       <div class="timer" id="timer">
-        <div class="timer-top"><span>Tiempo disponible</span><b id="tLeft">30<small>s</small></b></div>
+        <div class="timer-top"><span>Tiempo disponible</span><b id="tLeft">60<small>s</small></b></div>
         <div class="bar"><i id="tBar"></i></div>
       </div>
       <label class="box" for="guess">
@@ -291,6 +294,9 @@ header .intro .sub{color:#B5C7D6;font-size:.85em;margin-top:.2rem}
       <label><input type="radio" name="time" value="20"><span>20 segundos</span></label>
       <label><input type="radio" name="time" value="25"><span>25 segundos</span></label>
       <label><input type="radio" name="time" value="30"><span>30 segundos</span></label>
+      <label><input type="radio" name="time" value="40"><span>40 segundos</span></label>
+      <label><input type="radio" name="time" value="50"><span>50 segundos</span></label>
+      <label><input type="radio" name="time" value="60"><span>1 minuto</span></label>
     </div></div>
     <div class="row2">
       <button class="btn btn-sec" id="cfgCancel" type="button">Cancelar</button>
@@ -310,15 +316,15 @@ header .intro .sub{color:#B5C7D6;font-size:.85em;margin-top:.2rem}
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   /* ---------- Configuración (se guarda en este dispositivo) ---------- */
-  const DEFAULTS = {prec:0.5, shape:'tubo', time:30};
+  const DEFAULTS = {prec:0.5, shape:'tubo', time:60};
   let cfg = Object.assign({}, DEFAULTS);
   try { Object.assign(cfg, JSON.parse(localStorage.getItem('crv-tubo-cfg')||'{}')); } catch(e){}
   function saveCfg(){ try{ localStorage.setItem('crv-tubo-cfg', JSON.stringify(cfg)); }catch(e){} }
 
   const PREC = {
-    1:   {text:'Precisión: 1 (enteros)', ex:['32','74','8','29'],     hint:'Usa un número entero del 1 al 100 (ej.: 74).'},
-    0.5: {text:'Precisión: 0,5',          ex:['32','73,5','8','29,5'], hint:'Usa un número del 1 al 100, entero o terminado en ,5 (ej.: 73,5).'},
-    0.1: {text:'Precisión: 0,1',          ex:['32','73,4','8','29,7'], hint:'Usa un número del 1 al 100 con hasta un decimal (ej.: 73,4).'}
+    1:   {text:'Precisión: <b>1</b> <small>(enteros)</small>', ex:['32','74','8','29'],     hint:'Usa un número entero del 1 al 100 (ej.: 74).'},
+    0.5: {text:'Precisión: <b>0,5</b>',        ex:['32','73,5','8','29,5'], hint:'Usa un número del 1 al 100, entero o terminado en ,5 (ej.: 73,5).'},
+    0.1: {text:'Precisión: <b>0,1</b>',        ex:['32','73,4','8','29,7'], hint:'Usa un número del 1 al 100 con hasta un decimal (ej.: 73,4).'}
   };
   const QUESTION = {tubo:'del tubo', pecera:'de la pecera', matraz:'del matraz', ondulado:'del recipiente'};
 
@@ -357,9 +363,9 @@ header .intro .sub{color:#B5C7D6;font-size:.85em;margin-top:.2rem}
   }
 
   /* ---------- Dibujo del recipiente ---------- */
-  let W=100,H=500; const SW=1.5;
+  let W=100,H=500; const SW=1.5, TOP=24;   // TOP: espacio para la marca 100%
   let waterRect, surf, lineReal, lineGuess, bubblesG;
-  const yOf = t => SW/2 + (1-t)*(H-SW);
+  const yOf = t => TOP + SW/2 + (1-t)*(H-TOP-SW);
   const xHalf = t => shape.r(t)*(W/2 - SW);
 
   function el(name, attrs, parent){
@@ -410,6 +416,11 @@ header .intro .sub{color:#B5C7D6;font-size:.85em;margin-top:.2rem}
     lineReal=el('line',{x1:0,x2:W,y1:-10,y2:-10,stroke:'#FFFFFF','stroke-width':3,class:'mark real'},g);
     lineGuess=el('line',{x1:0,x2:W,y1:-10,y2:-10,stroke:'#FF7A59','stroke-width':3,'stroke-dasharray':'7 5',class:'mark guess'},g);
     el('path',{d:outline,fill:'none',stroke:'rgba(200,230,255,.75)','stroke-width':SW,'stroke-linejoin':'round'},svg);
+    // Marca del 100 %: línea en la boca del recipiente y rótulo arriba
+    const yTop=yOf(1), hx=xHalf(1);
+    el('line',{x1:cx-hx-6,x2:cx+hx+6,y1:yTop,y2:yTop,stroke:'#FFC857','stroke-width':2,'stroke-dasharray':'4 3'},svg);
+    const lbl=el('text',{x:cx,y:yTop-6,'text-anchor':'middle',fill:'#FFC857','font-family':'Nunito, Segoe UI, sans-serif','font-weight':900,'font-size':14},svg);
+    lbl.textContent='100%';
 
     setWater(level,false);
     if(state!=='idle') bubbles();
@@ -437,7 +448,7 @@ header .intro .sub{color:#B5C7D6;font-size:.85em;margin-top:.2rem}
     bubblesG.innerHTML='';
     if(reduce || level<=0) return;
     let minHalf=Infinity; for(let i=0;i<=40;i++) minHalf=Math.min(minHalf, xHalf(level*i/40));
-    const hWater=(H-SW)*level, count=Math.max(2, Math.round(hWater/45));
+    const hWater=(H-TOP-SW)*level, count=Math.max(2, Math.round(hWater/45));
     for(let i=0;i<count;i++){
       const s=1.5+Math.random()*3;
       const c=el('circle',{cx:W/2+(Math.random()*2-1)*minHalf*0.7, cy:H-SW-s, r:s, fill:'rgba(255,255,255,.55)', class:'bubble'},bubblesG);
@@ -451,7 +462,7 @@ header .intro .sub{color:#B5C7D6;font-size:.85em;margin-top:.2rem}
   /* ---------- Textos según configuración ---------- */
   function applyTexts(){
     const p=PREC[cfg.prec];
-    $('precText').textContent=p.text;
+    $('precText').innerHTML=p.text;
     $('question').textContent='¿Qué porcentaje '+QUESTION[cfg.shape]+' está lleno?';
     $('examples').innerHTML=p.ex.map(x=>'<b>'+x+'</b>').join('<i>/</i>');
     guess.setAttribute('inputmode', cfg.prec===1 ? 'numeric' : 'decimal');
@@ -547,13 +558,13 @@ header .intro .sub{color:#B5C7D6;font-size:.85em;margin-top:.2rem}
   // Etiquetas: nunca tapan la otra línea ni la otra etiqueta
   function placeMarks(){
     if(real===null || state!=='revealed') return;
-    const tR=tFromPct(real), m=4;
+    const tR=tFromPct(real), m=4, Hu=H-TOP;
     lineReal.setAttribute('y1',yOf(tR)); lineReal.setAttribute('y2',yOf(tR));
     tagReal.querySelector('span').textContent=f1(real);
     const yR=H-yOf(tR);
     if(lastGuess===null){
       const th=tagReal.offsetHeight;
-      tagReal.style.bottom=(yR+m+th<=H ? yR+m : yR-m-th)+'px';
+      tagReal.style.bottom=(yR+m+th<=Hu ? yR+m : yR-m-th)+'px';
       return;
     }
     const tG=tFromPct(lastGuess);
@@ -565,9 +576,9 @@ header .intro .sub{color:#B5C7D6;font-size:.85em;margin-top:.2rem}
     const hiTag=realIsHi?tagReal:tagGuess, loTag=realIsHi?tagGuess:tagReal;
     const yHi=Math.max(yR,yG), yLo=Math.min(yR,yG);
     let hiB, loB;
-    if(yHi+m+th<=H && yLo-m-th>=0){ hiB=yHi+m; loB=yLo-m-th; }
-    else if(yHi+m+th>H && yHi-m-th>=yLo+m && yLo-m-th>=0){ hiB=yHi-m-th; loB=yLo-m-th; }
-    else if(yLo-m-th<0 && yLo+m+th<=yHi-m && yHi+m+th<=H){ hiB=yHi+m; loB=yLo+m; }
+    if(yHi+m+th<=Hu && yLo-m-th>=0){ hiB=yHi+m; loB=yLo-m-th; }
+    else if(yHi+m+th>Hu && yHi-m-th>=yLo+m && yLo-m-th>=0){ hiB=yHi-m-th; loB=yLo-m-th; }
+    else if(yLo-m-th<0 && yLo+m+th<=yHi-m && yHi+m+th<=Hu){ hiB=yHi+m; loB=yLo+m; }
     else if(yLo-m-2*th-2>=0){ hiB=yLo-m-th; loB=yLo-m-2*th-2; }
     else { loB=yHi+m; hiB=yHi+m+th+2; }
     hiTag.style.bottom=hiB+'px'; loTag.style.bottom=loB+'px';
@@ -638,9 +649,14 @@ header .intro .sub{color:#B5C7D6;font-size:.85em;margin-top:.2rem}
       drawDots(); return;
     }
     drawDots();
-    if(typed===KEY){ typed=''; $('lockOv').hidden=true; openCfg(); }
+    if(typed===KEY){ typed=''; try{ localStorage.setItem(UNLOCK_KEY,String(Date.now())); }catch(e){} $('lockOv').hidden=true; openCfg(); }
   }
-  $('cfgBtn').addEventListener('click',()=>{ typed=''; drawDots(); $('lockOv').hidden=false; });
+  const UNLOCK_KEY='crv-tubo-unlock', UNLOCK_MS=5*60*60*1000;   // 5 horas
+  function unlocked(){ try{ return Date.now()-Number(localStorage.getItem(UNLOCK_KEY)||0) < UNLOCK_MS; }catch(e){ return false; } }
+  $('cfgBtn').addEventListener('click',()=>{
+    if(unlocked()){ openCfg(); return; }
+    typed=''; drawDots(); $('lockOv').hidden=false;
+  });
   $('lockCancel').addEventListener('click',()=>{ $('lockOv').hidden=true; });
 
   /* ---------- Ventana de configuración ---------- */
@@ -663,13 +679,12 @@ header .intro .sub{color:#B5C7D6;font-size:.85em;margin-top:.2rem}
     stopTimer(); real=null; lastGuess=null; setState('idle'); resetVisuals();
     guess.value=''; guess.disabled=true; btnNew.classList.add('pulse');
     buildShape(); applyTexts(); level=0; fitVessel();
-    hint.classList.add('info'); hint.textContent='Presiona Nuevo DESAFÍO para comenzar.';
   }
 
   /* Inicio */
   if(!PREC[cfg.prec]) cfg.prec=DEFAULTS.prec;
   if(!SHAPES[cfg.shape]) cfg.shape=DEFAULTS.shape;
-  if(![10,15,20,25,30].includes(cfg.time)) cfg.time=DEFAULTS.time;
+  if(![10,15,20,25,30,40,50,60].includes(cfg.time)) cfg.time=DEFAULTS.time;
   toIdle();
 })();
 </script>
