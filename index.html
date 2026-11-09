@@ -13,13 +13,9 @@
   color-scheme:dark;
   --bg:#0B1622; --bg2:#102031; --ink:#EAF4FB; --muted:#8AA3B8; --line:#22384D;
   --water-hi:#7FE3FF; --water:#1FA8F0; --water-lo:#0A5FC2;
-  --glass:rgba(200,230,255,.6);
   --guess:#FF7A59; --real:#FFFFFF;
   --good:#3DDC97; --warn:#FFC857; --bad:#FF6B6B;
-  --display:"Nunito","Segoe UI",system-ui,sans-serif;
-  --body:"Nunito","Segoe UI",system-ui,sans-serif;
-  --mono:"Nunito","Segoe UI",system-ui,sans-serif;
-  --bw:1.5px; /* pared del tubo, delgada */
+  --font:"Nunito","Segoe UI",system-ui,sans-serif;
 }
 
 /* Escala: en vertical (celular) todo se mide por el ancho de la pantalla,
@@ -30,12 +26,13 @@ html{font-size:16px}
 *{box-sizing:border-box}
 html,body{height:100%;margin:0}
 body{
-  background:var(--bg);color:var(--ink);font-family:var(--body);
-  font-size:1rem;font-weight:800;line-height:1.4;font-variant-numeric:tabular-nums;-webkit-text-size-adjust:100%;text-size-adjust:100%;
-  overflow:hidden;
+  background:var(--bg);color:var(--ink);font-family:var(--font);
+  font-size:1rem;font-weight:800;line-height:1.4;font-variant-numeric:tabular-nums;
+  -webkit-text-size-adjust:100%;text-size-adjust:100%;overflow:hidden;
 }
+button{font-family:var(--font)}
 
-/* Tubo a la izquierda, a todo el alto; todo lo demás a la derecha */
+/* Recipiente a la izquierda; todo lo demás a la derecha */
 .app{
   height:100vh;height:100dvh;margin:0 auto;
   display:grid;grid-template-columns:auto minmax(0,1fr);gap:1rem;
@@ -44,138 +41,121 @@ body{
 }
 @media (orientation:landscape){ .app{max-width:760px} }
 
-.slot{min-height:0;height:100%;display:flex;align-items:flex-start}
-.tube{
-  position:relative;width:80px;height:560px;border-radius:0;overflow:hidden;
-  border:var(--bw) solid var(--glass);
-  background:linear-gradient(90deg,rgba(255,255,255,.09),rgba(255,255,255,.02) 35%,rgba(255,255,255,.04) 70%,rgba(255,255,255,.10));
-  box-shadow:0 0 1.5rem rgba(127,227,255,.08), 0 1.5rem 3rem rgba(0,0,0,.5);
-}
-.tube::after{ /* brillo del vidrio */
-  content:"";position:absolute;top:0;bottom:0;left:14%;width:9%;z-index:3;pointer-events:none;
-  background:linear-gradient(90deg,transparent,rgba(255,255,255,.32),transparent);
-}
-.tube::before{
-  content:"";position:absolute;top:0;bottom:0;right:9%;width:3%;z-index:3;pointer-events:none;
-  background:rgba(255,255,255,.10);
-}
-.water{
-  position:absolute;left:0;right:0;bottom:0;height:0%;z-index:1;
-  background:linear-gradient(90deg,var(--water-lo),var(--water) 40%,var(--water) 60%,var(--water-lo));
-  transition:height 1.1s cubic-bezier(.25,.9,.3,1);
-}
-.water::before{
-  content:"";position:absolute;left:0;right:0;top:0;height:.35rem;
-  background:linear-gradient(180deg,var(--water-hi),rgba(127,227,255,0));
-}
-.bubble{
-  position:absolute;bottom:-10px;border-radius:50%;
-  background:radial-gradient(circle at 35% 35%,rgba(255,255,255,.9),rgba(255,255,255,.15) 60%,transparent 70%);
-  animation:rise linear infinite;
-}
+.stagecol{min-height:0;height:100%;display:flex;align-items:center;justify-content:center}
+.vessel{position:relative;flex:none}
+.vessel svg{display:block;overflow:visible}
+
+.bubble{animation:rise linear infinite;transform-box:fill-box}
 @keyframes rise{
   from{transform:translate(0,0);opacity:0}
   10%{opacity:.8}
   to{transform:translate(var(--dx),var(--dy));opacity:0}
 }
-.mark{position:absolute;left:0;right:0;height:0;z-index:2;opacity:0;transition:opacity .4s .3s}
-.mark.real{border-top:.2rem solid var(--real);box-shadow:0 0 .6rem rgba(255,255,255,.7)}
-.mark.guess{border-top:.2rem dashed var(--guess)}
-.revealed .mark{opacity:1}
+.mark{opacity:0;transition:opacity .4s .2s}
+.show-real .mark.real,.show-guess .mark.guess{opacity:1}
 
-/* Etiquetas dentro del tubo (solo después de jugar) */
+/* Etiquetas dentro del recipiente (solo después de jugar) */
 .tag{
-  position:absolute;left:50%;z-index:4;transform:translateX(-50%);opacity:0;transition:opacity .4s .5s;
-  font-family:var(--mono);font-weight:900;font-size:.85rem;line-height:1;white-space:nowrap;
-  padding:.22rem .3rem;border-radius:.25rem;text-align:center;
-  box-shadow:0 .15rem .5rem rgba(0,0,0,.35);
+  position:absolute;left:50%;z-index:4;transform:translateX(-50%);opacity:0;transition:opacity .4s .4s;
+  font-weight:900;font-size:.85rem;line-height:1;white-space:nowrap;
+  padding:.22rem .3rem;border-radius:.25rem;text-align:center;background:#FFFFFF;color:var(--bg);
+  box-shadow:0 .15rem .5rem rgba(0,0,0,.35);pointer-events:none;
 }
-.tag small{display:block;font-family:var(--body);font-size:.62rem;letter-spacing:.06em;text-transform:uppercase;opacity:.75;margin-bottom:.1rem}
-.tag.real{background:var(--real);color:var(--bg)}
-.tag.guess{background:#FFFFFF;color:var(--bg)}
+.tag small{display:block;font-size:.62rem;letter-spacing:.06em;text-transform:uppercase;opacity:.75;margin-bottom:.1rem}
 .tag.guess small{color:#E0572B;opacity:1}
-.revealed .tag{opacity:1}
+.show-real .tag.real,.show-guess .tag.guess{opacity:1}
 
 /* Columna derecha */
 .side{display:flex;flex-direction:column;gap:.9rem;min-width:0;min-height:0;overflow-y:auto}
 
 header h1{
-  font-family:var(--display);font-weight:900;font-size:1.6rem;line-height:1.08;
-  letter-spacing:-.01em;margin:0;text-wrap:balance;text-align:center;
+  font-weight:900;font-size:1.6rem;line-height:1.08;letter-spacing:-.01em;margin:0;
+  text-wrap:balance;text-align:center;
 }
 header h1 em{font-style:normal;color:var(--water-hi)}
 header .intro{margin-top:.5rem;font-size:.95rem;text-align:center}
-header .intro p{margin:0;line-height:1.35}
-header .intro .q{color:var(--ink);font-weight:800;font-size:1em}
+header .intro p{margin:0;line-height:1.3}
+header .intro .q{color:var(--ink);font-weight:800}
 header .intro .sub{color:#B5C7D6;font-size:.85em;margin-top:.2rem}
 .examples{
   margin-top:.55rem;padding:.5rem .65rem;border-radius:.55rem;
   background:rgba(127,227,255,.10);border:1px solid rgba(127,227,255,.35);
-  font-size:.95rem;font-weight:900;color:var(--ink);text-align:center;
+  font-size:.95rem;font-weight:900;text-align:center;
 }
-.examples .nums{display:flex;justify-content:space-between;align-items:baseline;margin-top:.2rem;font-size:1.15rem}
-.examples b{font-family:var(--mono);font-weight:900;color:var(--water-hi)}
+.examples .nums{overflow:hidden;display:flex;gap:.15em;justify-content:space-between;align-items:baseline;margin-top:.2rem;font-size:1.15rem}
+.examples b{font-weight:900;color:var(--water-hi)}
 .examples i{font-style:normal;font-weight:900;color:var(--guess)}
 
-.controls{display:grid;gap:.6rem;transition:margin-top .5s cubic-bezier(.3,.9,.3,1)}
+.controls{display:grid;grid-template-columns:minmax(0,1fr);gap:.6rem;transition:margin-top .5s cubic-bezier(.3,.9,.3,1)}
+
+/* Tiempo disponible */
+.timer{display:grid;grid-template-columns:minmax(0,1fr);gap:.3rem}
+.timer-top{display:flex;justify-content:space-between;align-items:baseline;gap:.4rem}
+.timer-top span{min-width:0;white-space:nowrap;overflow:hidden;font-size:.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.timer-top b{font-size:1.5rem;font-weight:900;line-height:1}
+.timer-top b small{font-size:.6em;color:var(--muted);margin-left:.1rem}
+.bar{height:.5rem;border-radius:1rem;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;width:100%;background:var(--good);border-radius:1rem;transform-origin:left}
+.timer.mid .bar i{background:var(--warn)}
+.timer.low b{color:var(--bad)}
+.timer.low .bar i{background:var(--bad)}
+
 .box{
   position:relative;display:flex;align-items:center;min-height:3.9rem;border-radius:.8rem;
-  background:#EAF4FB;border:2px solid #FFFFFF;transition:box-shadow .2s;
-  box-shadow:0 0 0 0 rgba(127,227,255,0);
+  background:#EAF4FB;border:2px solid #FFFFFF;transition:box-shadow .2s,opacity .2s;
 }
 .box:focus-within{box-shadow:0 0 0 .2rem var(--water-hi)}
 .box input{
-  font-weight:900;
-  flex:1;min-width:0;width:100%;border:0;outline:0;background:transparent;color:#0B1622;
-  font-family:var(--mono);font-weight:900;font-size:2.375rem;padding:.1rem 2.2rem;text-align:center;
-  font-variant-numeric:tabular-nums;
+  flex:1 1 0;min-width:0;width:0;border:0;outline:0;background:transparent;color:#0B1622;
+  font-family:var(--font);font-weight:900;font-size:2.375rem;padding:.1rem 1.9rem;text-align:center;
 }
 .box input::placeholder{color:#9DB2C4}
 .box input:disabled{color:#0B1622;-webkit-text-fill-color:#0B1622;opacity:1}
-.box .pct{position:absolute;right:.85rem;top:50%;transform:translateY(-50%);font-family:var(--mono);font-size:1.4rem;color:#4A6378;pointer-events:none}
+.box .pct{position:absolute;right:.85rem;top:50%;transform:translateY(-50%);font-size:1.4rem;color:#4A6378;pointer-events:none}
+.idle .box{opacity:.45}
+
 .btn{
-  width:100%;font-family:var(--display);font-weight:800;font-size:1.1rem;letter-spacing:.01em;cursor:pointer;
-  min-height:3.3rem;padding:0 1rem;border-radius:.8rem;border:0;text-transform:none;
+  width:100%;font-weight:800;font-size:1.1rem;letter-spacing:.01em;cursor:pointer;
+  min-height:3.3rem;padding:0 1rem;border-radius:.8rem;border:0;
   touch-action:manipulation;-webkit-tap-highlight-color:transparent;transition:transform .1s,opacity .2s;
 }
 .btn:active{transform:scale(.97)}
 .btn:focus-visible{outline:3px solid var(--water-hi);outline-offset:3px}
 .btn:disabled{opacity:.3;cursor:not-allowed}
 .btn-go{background:#22C55E;color:#04210F;font-size:1.3rem;font-weight:900;box-shadow:0 .4rem 1.2rem rgba(34,197,94,.3)}
-.btn-new{
-  color:#FFFFFF;background:#E53935;
-  box-shadow:0 .4rem 1.3rem rgba(229,57,53,.35);
-}
+.btn-new{white-space:nowrap;overflow:hidden;color:#FFFFFF;background:#E53935;box-shadow:0 .4rem 1.3rem rgba(229,57,53,.35)}
 .btn-new.pulse{animation:pulse 1.6s ease-in-out infinite}
 @keyframes pulse{50%{box-shadow:0 .4rem 2rem rgba(255,90,85,.85)}}
+.revealed .btn-go,.idle .btn-go{display:none}
 .hint:empty{display:none}
-.hint{font-size:.85rem;color:var(--bad);margin:0}
+.hint{font-size:.85rem;color:var(--bad);margin:0;text-align:center}
+.hint.info{color:var(--muted)}
 
 /* Resultado */
-.result{display:none;flex-direction:column;gap:.6rem;margin-top:2.1rem} /* doble de espacio bajo Nuevo DESAFÍO */
-.revealed .btn-go{display:none}
-.card.white{padding-left:.25rem;padding-right:.25rem}
-.card.white b{white-space:nowrap}
+.result{display:none;flex-direction:column;gap:.6rem;margin-top:2.1rem}
 .revealed .result{display:flex;animation:fadeIn .5s .3s both}
 @keyframes fadeIn{from{opacity:0;transform:translateY(.6rem)}to{opacity:1;transform:none}}
-.verdict{font-family:var(--display);font-weight:900;font-size:1.35rem;line-height:1.1;margin:0;color:var(--sev);text-align:center}
+.verdict{font-weight:900;font-size:1.35rem;line-height:1.1;margin:0;color:var(--sev);text-align:center}
 .cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.5rem}
-.card.miss{grid-column:1/-1}
-.card{
-  width:100%;text-align:center;padding:.4rem .6rem .45rem;border-radius:.8rem;
-  background:var(--bg2);border:1px solid var(--line);
-}
+.card{text-align:center;padding:.4rem .6rem .45rem;border-radius:.8rem;background:var(--bg2);border:1px solid var(--line)}
 .card span{display:block;font-size:.9rem;font-weight:800;color:var(--muted);letter-spacing:.03em}
-.card b{display:block;font-family:var(--mono);font-weight:800;font-size:1.9rem;font-weight:900;line-height:1.1;font-variant-numeric:tabular-nums}
-.card.white{background:#FFFFFF;border-color:#FFFFFF}
+.card b{display:block;font-weight:900;font-size:1.9rem;line-height:1.1}
+.card.white{background:#FFFFFF;border-color:#FFFFFF;padding-left:.25rem;padding-right:.25rem}
 .card.white span{color:#4A6378;font-size:1.15rem}
-.card.white b{color:#0B1622;font-size:1.75rem}
-.card.miss{border-color:var(--sev)}
+.card.white b{color:#0B1622;font-size:1.75rem;white-space:nowrap}
+.card.miss{grid-column:1/-1;border-color:var(--sev)}
 .card.miss b{color:var(--sev)}
+
+/* Botón de configuración, al final de la columna */
+.cfg-btn{
+  margin-top:auto;align-self:center;background:transparent;color:var(--muted);flex:none;
+  border:1px solid var(--line);border-radius:2rem;padding:.4rem .9rem;font-size:.8rem;font-weight:800;cursor:pointer;
+}
+.cfg-btn:focus-visible{outline:3px solid var(--water-hi);outline-offset:2px}
 
 .side.tight{gap:.55rem}
 .side.tight .cards{gap:.35rem}
-.side.tight .card{padding:.2rem .5rem .25rem}
+.side.tight .card{padding-top:.2rem;padding-bottom:.25rem}
 .side.tight .card b{font-size:1.55rem}
 .side.tight .card span{font-size:.8rem}
 .side.tight .card.white span{font-size:1rem}
@@ -184,41 +164,86 @@ header .intro .sub{color:#B5C7D6;font-size:.85em;margin-top:.2rem}
 .side.tight .controls{gap:.45rem}
 .side.tight .btn{min-height:2.9rem}
 .side.tight .box{min-height:3.1rem}
+.side.tight .result{margin-top:1rem}
+
+/* Ventanas de clave y configuración */
+.overlay{
+  position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;
+  background:rgba(4,10,16,.82);padding:1rem;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+}
+.overlay[hidden]{display:none}
+.panel{
+  width:100%;max-width:26rem;max-height:100%;overflow-y:auto;background:var(--bg2);border:1px solid var(--line);
+  border-radius:1rem;padding:1.1rem;box-shadow:0 1.5rem 3rem rgba(0,0,0,.5);
+}
+.panel h2{margin:0 0 .3rem;font-size:1.3rem;font-weight:900;text-align:center}
+.panel p.help{margin:0 0 .9rem;font-size:.85rem;color:var(--muted);text-align:center}
+.letters{display:flex;flex-wrap:wrap;justify-content:center;gap:.4rem}
+.letters button{
+  width:2.6rem;height:3rem;border-radius:.55rem;border:2px solid var(--line);background:var(--bg);
+  color:var(--ink);font-size:1.4rem;font-weight:900;cursor:pointer;touch-action:manipulation;
+}
+.letters button:active{background:var(--water);color:#04101C}
+.dots{display:flex;justify-content:center;gap:.3rem;margin:.9rem 0 .2rem}
+.dots i{width:.55rem;height:.55rem;border-radius:50%;background:var(--line)}
+.dots i.on{background:var(--water-hi)}
+.shake{animation:shake .4s}
+@keyframes shake{20%,60%{transform:translateX(-.5rem)}40%,80%{transform:translateX(.5rem)}}
+.group{margin-top:1rem}
+.group h3{margin:0 0 .45rem;font-size:.85rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.chips{display:flex;flex-wrap:wrap;gap:.4rem}
+.chips label{position:relative}
+.chips input{position:absolute;opacity:0;pointer-events:none}
+.chips span{
+  display:inline-block;padding:.5rem .8rem;border-radius:2rem;border:2px solid var(--line);
+  background:var(--bg);font-weight:800;font-size:.95rem;cursor:pointer;
+}
+.chips input:checked + span{background:var(--water-hi);border-color:var(--water-hi);color:#04101C}
+.chips input:focus-visible + span{outline:3px solid var(--water-hi);outline-offset:2px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-top:1.1rem}
+.row2.one{grid-template-columns:1fr}
+.btn-sec{background:transparent;color:var(--ink);border:2px solid var(--line)}
+.btn-ok{background:var(--water-hi);color:#04101C}
 
 @media (prefers-reduced-motion:reduce){
-  .water,.mark,.tag{transition:none}
+  .mark,.tag{transition:none}
   .bubble{display:none}
-  .btn-new.pulse,.revealed .result{animation:none}
+  .btn-new.pulse,.revealed .result,.shake{animation:none}
 }
 </style>
 </head>
 <body>
-<div class="app" id="app">
-  <div class="slot" id="slot">
-    <div class="tube" id="tube" aria-label="Tubo con agua">
-      <div class="water" id="water"></div>
-      <div class="mark real" id="markReal"></div>
-      <div class="mark guess" id="markGuess"></div>
+<div class="app idle" id="app">
+  <div class="stagecol" id="stagecol">
+    <div class="vessel" id="vessel">
+      <svg id="svg" aria-label="Recipiente con agua"></svg>
       <div class="tag real" id="tagReal"><small>Real</small><span></span></div>
       <div class="tag guess" id="tagGuess"><small>Tú</small><span></span></div>
     </div>
   </div>
 
-  <div class="side">
+  <div class="side" id="side">
     <header>
       <h1>¡Acierta el <em>%</em> y gana!</h1>
-      <div class="intro" id="intro"><p class="q">¿Qué porcentaje del tubo está lleno?</p><p class="sub">Números redondos o terminados en ,5.</p></div>
-      <div class="examples">Ejemplos:<div class="nums"><b>32</b><i>/</i><b>73,5</b><i>/</i><b>8</b><i>/</i><b>29,5</b></div></div>
+      <div class="intro" id="intro">
+        <p class="q" id="question">¿Qué porcentaje del tubo está lleno?</p>
+        <p class="sub" id="precText">Precisión: 0,5</p>
+      </div>
+      <div class="examples">Ejemplos:<div class="nums" id="examples"></div></div>
     </header>
 
     <form class="controls" id="form" novalidate>
+      <div class="timer" id="timer">
+        <div class="timer-top"><span>Tiempo disponible</span><b id="tLeft">30<small>s</small></b></div>
+        <div class="bar"><i id="tBar"></i></div>
+      </div>
       <label class="box" for="guess">
-        <input id="guess" type="text" inputmode="decimal" maxlength="4" size="4" placeholder="00" autocomplete="off" enterkeyhint="go" aria-label="Tu estimación en porcentaje">
+        <input id="guess" type="text" inputmode="decimal" maxlength="4" size="4" placeholder="00" autocomplete="off" enterkeyhint="go" aria-label="Tu estimación en porcentaje" disabled>
         <span class="pct">%</span>
       </label>
       <p class="hint" id="hint" role="alert"></p>
       <button class="btn btn-go" id="btnGo" type="submit">Ingresar</button>
-      <button class="btn btn-new" id="btnNew" type="button">Nuevo DESAFÍO</button>
+      <button class="btn btn-new pulse" id="btnNew" type="button">Nuevo DESAFÍO</button>
     </form>
 
     <div class="result" id="result" aria-live="polite">
@@ -229,89 +254,289 @@ header .intro .sub{color:#B5C7D6;font-size:.85em;margin-top:.2rem}
         <div class="card miss"><span>Fallaste por</span><b id="rErr"></b></div>
       </div>
     </div>
+
+    <button class="cfg-btn" id="cfgBtn" type="button">Configuración</button>
   </div>
+</div>
+
+<!-- Clave de letras -->
+<div class="overlay" id="lockOv" hidden>
+  <div class="panel" id="lockPanel">
+    <h2>Configuración</h2>
+    <p class="help">Ingresa la clave presionando las letras.</p>
+    <div class="letters" id="letters"></div>
+    <div class="dots" id="dots"></div>
+    <div class="row2 one"><button class="btn btn-sec" id="lockCancel" type="button">Cancelar</button></div>
+  </div>
+</div>
+
+<!-- Configuración -->
+<div class="overlay" id="cfgOv" hidden>
+  <form class="panel" id="cfgForm">
+    <h2>Configuración</h2>
+    <div class="group"><h3>Precisión</h3><div class="chips">
+      <label><input type="radio" name="prec" value="1"><span>1</span></label>
+      <label><input type="radio" name="prec" value="0.5"><span>0,5</span></label>
+      <label><input type="radio" name="prec" value="0.1"><span>0,1</span></label>
+    </div></div>
+    <div class="group"><h3>Contenedor</h3><div class="chips">
+      <label><input type="radio" name="shape" value="tubo"><span>Tubo</span></label>
+      <label><input type="radio" name="shape" value="pecera"><span>Pecera</span></label>
+      <label><input type="radio" name="shape" value="matraz"><span>Matraz</span></label>
+      <label><input type="radio" name="shape" value="ondulado"><span>Ondulado</span></label>
+    </div></div>
+    <div class="group"><h3>Tiempo</h3><div class="chips">
+      <label><input type="radio" name="time" value="10"><span>10 segundos</span></label>
+      <label><input type="radio" name="time" value="15"><span>15 segundos</span></label>
+      <label><input type="radio" name="time" value="20"><span>20 segundos</span></label>
+      <label><input type="radio" name="time" value="25"><span>25 segundos</span></label>
+      <label><input type="radio" name="time" value="30"><span>30 segundos</span></label>
+    </div></div>
+    <div class="row2">
+      <button class="btn btn-sec" id="cfgCancel" type="button">Cancelar</button>
+      <button class="btn btn-ok" type="submit">Guardar</button>
+    </div>
+  </form>
 </div>
 
 <script>
 (function(){
   const $ = id => document.getElementById(id);
-  const app=$('app'), slot=$('slot'), tube=$('tube'), water=$('water');
-  const mReal=$('markReal'), mGuess=$('markGuess'), tagReal=$('tagReal'), tagGuess=$('tagGuess');
-  const guess=$('guess'), hint=$('hint'), btnGo=$('btnGo'), btnNew=$('btnNew');
+  const NS = 'http://www.w3.org/2000/svg';
+  const app=$('app'), side=$('side'), stagecol=$('stagecol'), vessel=$('vessel'), svg=$('svg');
+  const tagReal=$('tagReal'), tagGuess=$('tagGuess');
+  const guess=$('guess'), hint=$('hint'), btnGo=$('btnGo'), btnNew=$('btnNew'), form=$('form');
   const finePointer = matchMedia('(pointer:fine)').matches;
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  let real=null, answered=false;
 
-  const fmt = x => (Number.isInteger(x) ? String(x) : x.toFixed(1)).replace('.',',');
+  /* ---------- Configuración (se guarda en este dispositivo) ---------- */
+  const DEFAULTS = {prec:0.5, shape:'tubo', time:30};
+  let cfg = Object.assign({}, DEFAULTS);
+  try { Object.assign(cfg, JSON.parse(localStorage.getItem('crv-tubo-cfg')||'{}')); } catch(e){}
+  function saveCfg(){ try{ localStorage.setItem('crv-tubo-cfg', JSON.stringify(cfg)); }catch(e){} }
 
-  // Tubo lo más largo posible (todo el alto), con alto = 7 × ancho
-  function fitTube(){
-    const h = Math.max(200, slot.clientHeight);
-    tube.style.height = h+'px';
-    tube.style.width = (h/7*1.2)+'px'; // 20% más ancho que 1:7
+  const PREC = {
+    1:   {text:'Precisión: 1 (enteros)', ex:['32','74','8','29'],     hint:'Usa un número entero del 1 al 100 (ej.: 74).'},
+    0.5: {text:'Precisión: 0,5',          ex:['32','73,5','8','29,5'], hint:'Usa un número del 1 al 100, entero o terminado en ,5 (ej.: 73,5).'},
+    0.1: {text:'Precisión: 0,1',          ex:['32','73,4','8','29,7'], hint:'Usa un número del 1 al 100 con hasta un decimal (ej.: 73,4).'}
+  };
+  const QUESTION = {tubo:'del tubo', pecera:'de la pecera', matraz:'del matraz', ondulado:'del recipiente'};
+
+  /* ---------- Formas: radio relativo r(t), t = 0 abajo … 1 arriba ---------- */
+  function interp(pts, smooth){
+    return t=>{
+      for(let i=1;i<pts.length;i++){
+        if(t<=pts[i][0]){
+          const [t0,r0]=pts[i-1],[t1,r1]=pts[i];
+          let u=(t-t0)/(t1-t0); if(smooth) u=(1-Math.cos(Math.PI*u))/2;
+          return r0+(r1-r0)*u;
+        }
+      }
+      return pts[pts.length-1][1];
+    };
   }
-  if (window.ResizeObserver) new ResizeObserver(fitTube).observe(slot);
-  addEventListener('resize', fitTube);
-  fitTube();
+  const SHAPES = {
+    tubo:    {A:1.2/7, closed:true, r:()=>1},
+    pecera:  {A:0.78, r:t=>{ const y=-0.8+t*1.55; return Math.sqrt(Math.max(0,1-y*y)); }},
+    matraz:  {A:0.5, r:interp([[0,.93],[.03,1],[.6,.27],[.63,.25],[.96,.25],[1,.3]], false)},
+    ondulado:{A:0.52, r:interp([[0,.6],[.04,.74],[.15,1],[.28,.64],[.42,.93],[.55,.6],[.68,.74],[.79,.42],[.84,.37],[1,.37]], true)}
+  };
 
+  /* % lleno = % del VOLUMEN (sólido de revolución), no de la altura */
+  const N = 800; let shape, cum;
+  function buildShape(){
+    shape = SHAPES[cfg.shape] || SHAPES.tubo;
+    cum = new Float64Array(N+1);
+    for(let i=1;i<=N;i++){ const r=shape.r((i-.5)/N); cum[i]=cum[i-1]+r*r; }
+    const tot=cum[N]; for(let i=0;i<=N;i++) cum[i]/=tot;
+  }
+  function tFromPct(p){
+    const f=Math.min(1,Math.max(0,p/100));
+    let lo=0,hi=N; while(hi-lo>1){ const m=(lo+hi)>>1; if(cum[m]<f) lo=m; else hi=m; }
+    const span=cum[hi]-cum[lo]||1; return (lo+(f-cum[lo])/span)/N;
+  }
+
+  /* ---------- Dibujo del recipiente ---------- */
+  let W=100,H=500; const SW=1.5;
+  let waterRect, surf, lineReal, lineGuess, bubblesG;
+  const yOf = t => SW/2 + (1-t)*(H-SW);
+  const xHalf = t => shape.r(t)*(W/2 - SW);
+
+  function el(name, attrs, parent){
+    const e=document.createElementNS(NS,name);
+    for(const k in attrs) e.setAttribute(k,attrs[k]);
+    if(parent) parent.appendChild(e); return e;
+  }
+
+  function fitVessel(){
+    const cs=getComputedStyle(app);
+    const contentW = app.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+    const availH = stagecol.clientHeight;
+    const maxW = contentW*0.45;
+    H = Math.max(200, availH); W = H*shape.A;
+    if (W > maxW){ W = maxW; H = W/shape.A; }
+    stagecol.style.width = W+'px';
+    vessel.style.width = W+'px'; vessel.style.height = H+'px';
+    drawVessel();
+    fitTexts();
+  }
+
+  function drawVessel(){
+    svg.innerHTML=''; svg.setAttribute('width',W); svg.setAttribute('height',H);
+    svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+    const cx=W/2, S=240, right=[], left=[];
+    for(let i=0;i<=S;i++){ const t=i/S; right.push([cx+xHalf(t), yOf(t)]); }   // abajo → arriba
+    for(let i=S;i>=0;i--){ const t=i/S; left.push([cx-xHalf(t), yOf(t)]); }    // arriba → abajo
+    const P = a => a.map(p=>p[0].toFixed(2)+','+p[1].toFixed(2)).join(' L');
+    const inner = 'M'+P(right)+' L'+P(left)+' Z';
+    const outline = shape.closed ? inner : 'M'+P(left)+' L'+P(right);   // boca abierta arriba
+
+    const defs=el('defs',{},svg);
+    const clip=el('clipPath',{id:'inside'},defs); el('path',{d:inner},clip);
+    const grad=(id,stops,v)=>{ const g=el('linearGradient',Object.assign({id},v?{x1:0,x2:0,y1:0,y2:1}:{x1:0,x2:1,y1:0,y2:0}),defs);
+      stops.forEach(([o,c])=>el('stop',{offset:o,'stop-color':c},g)); };
+    grad('gw',[[0,'#0A5FC2'],[.4,'#1FA8F0'],[.6,'#1FA8F0'],[1,'#0A5FC2']]);
+    grad('gg',[[0,'rgba(255,255,255,.10)'],[.35,'rgba(255,255,255,.02)'],[.7,'rgba(255,255,255,.04)'],[1,'rgba(255,255,255,.10)']]);
+    grad('gs',[[0,'#7FE3FF'],[1,'rgba(127,227,255,0)']],true);
+    grad('gsh',[[0,'rgba(255,255,255,0)'],[.5,'rgba(255,255,255,.34)'],[1,'rgba(255,255,255,0)']]);
+
+    el('path',{d:inner,fill:'url(#gg)'},svg);
+    const g=el('g',{'clip-path':'url(#inside)'},svg);
+    waterRect=el('rect',{x:0,width:W,y:H,height:0,fill:'url(#gw)'},g);
+    surf=el('rect',{x:0,width:W,y:H,height:5,fill:'url(#gs)',opacity:0},g);
+    bubblesG=el('g',{},g);
+    const maxHalf=W/2-SW;
+    el('rect',{x:cx-maxHalf*0.62,width:maxHalf*0.2,y:0,height:H,fill:'url(#gsh)'},g);
+    lineReal=el('line',{x1:0,x2:W,y1:-10,y2:-10,stroke:'#FFFFFF','stroke-width':3,class:'mark real'},g);
+    lineGuess=el('line',{x1:0,x2:W,y1:-10,y2:-10,stroke:'#FF7A59','stroke-width':3,'stroke-dasharray':'7 5',class:'mark guess'},g);
+    el('path',{d:outline,fill:'none',stroke:'rgba(200,230,255,.75)','stroke-width':SW,'stroke-linejoin':'round'},svg);
+
+    setWater(level,false);
+    if(state!=='idle') bubbles();
+    placeMarks();
+  }
+
+  /* ---------- Agua ---------- */
+  let level=0, anim=null;
+  function paintWater(t){
+    const y=yOf(t);
+    waterRect.setAttribute('y',y); waterRect.setAttribute('height',Math.max(0,H-y));
+    surf.setAttribute('y',y); surf.setAttribute('opacity', t>0.002?1:0);
+  }
+  function setWater(target, animate){
+    cancelAnimationFrame(anim);
+    level=target;
+    if(!animate || reduce){ paintWater(level); return; }
+    const t0=performance.now(), dur=1100, ease=u=>1-Math.pow(1-u,3);
+    (function step(now){
+      const u=Math.min(1,(now-t0)/dur); paintWater(target*ease(u));
+      if(u<1) anim=requestAnimationFrame(step);
+    })(t0);
+  }
   function bubbles(){
-    water.querySelectorAll('.bubble').forEach(b=>b.remove());
-    if (reduce) return;
-    const w = tube.clientWidth, hWater = tube.clientHeight*real/100;
-    const count = Math.max(2, Math.round(hWater/45));
+    bubblesG.innerHTML='';
+    if(reduce || level<=0) return;
+    let minHalf=Infinity; for(let i=0;i<=40;i++) minHalf=Math.min(minHalf, xHalf(level*i/40));
+    const hWater=(H-SW)*level, count=Math.max(2, Math.round(hWater/45));
     for(let i=0;i<count;i++){
-      const b=document.createElement('i'); b.className='bubble';
-      const s = 3 + Math.random()*6;
-      b.style.width=b.style.height=s+'px';
-      b.style.left=(8+Math.random()*(w-16-s))+'px';
-      b.style.setProperty('--dx',(Math.random()*10-5)+'px');
-      b.style.setProperty('--dy',(-hWater)+'px');
-      b.style.animationDuration=(2.5+Math.random()*4)+'s';
-      b.style.animationDelay=(Math.random()*5)+'s';
-      water.appendChild(b);
+      const s=1.5+Math.random()*3;
+      const c=el('circle',{cx:W/2+(Math.random()*2-1)*minHalf*0.7, cy:H-SW-s, r:s, fill:'rgba(255,255,255,.55)', class:'bubble'},bubblesG);
+      c.style.setProperty('--dx',(Math.random()*8-4)+'px');
+      c.style.setProperty('--dy',(-hWater+s)+'px');
+      c.style.animationDuration=(2.5+Math.random()*4)+'s';
+      c.style.animationDelay=(Math.random()*5)+'s';
     }
   }
 
-  // Cambia la posición de los elementos de la derecha en cada desafío,
-  // para que no sirvan de referencia de altura
-  const intro=$('intro'), form=$('form');
+  /* ---------- Textos según configuración ---------- */
+  function applyTexts(){
+    const p=PREC[cfg.prec];
+    $('precText').textContent=p.text;
+    $('question').textContent='¿Qué porcentaje '+QUESTION[cfg.shape]+' está lleno?';
+    $('examples').innerHTML=p.ex.map(x=>'<b>'+x+'</b>').join('<i>/</i>');
+    guess.setAttribute('inputmode', cfg.prec===1 ? 'numeric' : 'decimal');
+    guess.maxLength = cfg.prec===1 ? 3 : 4;
+    showTime(cfg.time*1000);
+  }
+
+  /* Achica textos que no caben en una línea (columna angosta) */
+  function fitTexts(){
+    [$('examples'), btnNew, document.querySelector('.timer-top span')].forEach(e=>{
+      e.style.fontSize=''; let fs=parseFloat(getComputedStyle(e).fontSize);
+      while(e.scrollWidth>e.clientWidth+1 && fs>8){ fs-=0.5; e.style.fontSize=fs+'px'; }
+    });
+  }
+
+  /* Cambia tamaño del texto y posición de los controles en cada desafío */
+  const intro=$('intro');
   function shuffleRefs(){
-    intro.style.fontSize = (0.85 + Math.random()*0.24).toFixed(3)+'rem';   // 0,85 a 1,09 rem
-    form.style.marginTop = (Math.random()*7).toFixed(2)+'rem';          // baja entre 0 y 7 rem
+    intro.style.fontSize=(0.85+Math.random()*0.24).toFixed(3)+'rem';
+    form.style.marginTop=(Math.random()*7).toFixed(2)+'rem';
   }
-
-  // Si el resultado no cabe, sube el bloque de controles lo necesario
-  const side = document.querySelector('.side');
   function fitSide(){
-    const over = side.scrollHeight - side.clientHeight;
-    if (over > 0){
-      const cur = parseFloat(getComputedStyle(form).marginTop) || 0;
-      form.style.transition = 'none';
-      form.style.marginTop = Math.max(0, cur - over) + 'px';
-      void form.offsetHeight; form.style.transition = '';
+    const over=side.scrollHeight-side.clientHeight;
+    if(over>0){
+      const cur=parseFloat(getComputedStyle(form).marginTop)||0;
+      form.style.transition='none'; form.style.marginTop=Math.max(0,cur-over)+'px';
+      void form.offsetHeight; form.style.transition='';
     }
-    if (side.scrollHeight > side.clientHeight) side.classList.add('tight');   // compacta si aún no cabe
-    if (side.scrollHeight > side.clientHeight) side.scrollTop = side.scrollHeight; // último recurso
-
+    if(side.scrollHeight>side.clientHeight) side.classList.add('tight');
+    if(side.scrollHeight>side.clientHeight) side.scrollTop=side.scrollHeight;
   }
-  addEventListener('resize', ()=>{ if (app.classList.contains('revealed')) fitSide(); });
+
+  /* ---------- Tiempo disponible ---------- */
+  let deadline=0, tick=null;
+  function showTime(ms){
+    const total=cfg.time*1000, s=Math.ceil(ms/1000);
+    $('tLeft').innerHTML=s+'<small>s</small>';
+    $('tBar').style.transform='scaleX('+Math.max(0,ms/total)+')';
+    const tm=$('timer');
+    tm.classList.toggle('low', s<=5 && ms<total);
+    tm.classList.toggle('mid', s>5 && ms<=total/2);
+  }
+  function startTimer(){
+    stopTimer(); deadline=performance.now()+cfg.time*1000;
+    (function loop(){
+      const left=deadline-performance.now();
+      showTime(Math.max(0,left));
+      if(left<=0){ timeUp(); return; }
+      tick=requestAnimationFrame(loop);
+    })();
+  }
+  function stopTimer(){ cancelAnimationFrame(tick); tick=null; }
+
+  /* ---------- Juego ---------- */
+  let real=null, state='idle', lastGuess=null;
+  const fmt = x => (Number.isInteger(x) ? String(x) : x.toFixed(1)).replace('.',',');
+  const f1  = x => x.toFixed(1).replace('.',',')+'%';
+  const round1 = x => Math.round(x*10)/10;
+
+  function randomReal(){
+    const step=cfg.prec, n=Math.round((100-step-1)/step)+1;   // de 1 a 100 − precisión
+    return round1(1 + Math.floor(Math.random()*n)*step);
+  }
+  function setState(s){
+    state=s;
+    app.classList.toggle('idle', s==='idle');
+    app.classList.toggle('revealed', s==='revealed');
+  }
+  function resetVisuals(){
+    vessel.classList.remove('show-real','show-guess');
+    side.classList.remove('tight'); side.scrollTop=0;
+    hint.textContent=''; hint.classList.remove('info');
+  }
 
   function newChallenge(){
-    shuffleRefs();
-    real = (Math.floor(Math.random()*197)+2)/2; // 1 a 99,5 en pasos de 0,5
-    answered=false;
-    app.classList.remove('revealed');
-    side.classList.remove('tight'); side.scrollTop = 0;
-    hint.textContent=''; guess.value=''; guess.disabled=false; btnGo.disabled=false;
+    shuffleRefs(); resetVisuals();
+    real=randomReal(); lastGuess=null; setState('playing');
+    guess.value=''; guess.disabled=false; btnGo.disabled=false;
     btnNew.classList.remove('pulse');
-    water.style.transition='none'; water.style.height='0%';
-    void water.offsetHeight; water.style.transition='';
-    requestAnimationFrame(()=>{ water.style.height=real+'%'; });
-    setTimeout(bubbles, 50);
-    if (finePointer) guess.focus({preventScroll:true});
+    setWater(0,false); bubblesG.innerHTML='';
+    requestAnimationFrame(()=>{ setWater(tFromPct(real), true); setTimeout(bubbles,50); });
+    startTimer();
+    if(finePointer) guess.focus({preventScroll:true});
   }
 
-  // Mensaje según la falla en puntos porcentuales
   function sev(err){
     if(err===0) return ['var(--good)','¡EXACTO!'];
     if(err<=2)  return ['var(--good)','¡Ojo de águila!'];
@@ -319,77 +544,133 @@ header .intro .sub{color:#B5C7D6;font-size:.85em;margin-top:.2rem}
     return ['var(--bad)','¡Lejos esta vez!'];
   }
 
-  // Solo números y un decimal
-  guess.addEventListener('input', ()=>{
-    let v = guess.value.replace('.',',').replace(/[^\d,]/g,'');
-    const i = v.indexOf(',');
-    if (i>=0) v = v.slice(0,i+1) + v.slice(i+1).replace(/,/g,'').slice(0,1);
-    guess.value = v;
-  });
-
-  $('form').addEventListener('submit', e=>{
-    e.preventDefault();
-    if (real===null || answered) return;
-    const raw = guess.value.trim().replace(',','.');
-    const g = Number(raw);
-    if (raw==='' || !isFinite(g) || g<1 || g>100 || !Number.isInteger(g*2)){
-      hint.textContent='Usa un número del 1 al 100, entero o terminado en ,5 (ej.: 73,5).';
+  // Etiquetas: nunca tapan la otra línea ni la otra etiqueta
+  function placeMarks(){
+    if(real===null || state!=='revealed') return;
+    const tR=tFromPct(real), m=4;
+    lineReal.setAttribute('y1',yOf(tR)); lineReal.setAttribute('y2',yOf(tR));
+    tagReal.querySelector('span').textContent=f1(real);
+    const yR=H-yOf(tR);
+    if(lastGuess===null){
+      const th=tagReal.offsetHeight;
+      tagReal.style.bottom=(yR+m+th<=H ? yR+m : yR-m-th)+'px';
       return;
     }
-    hint.textContent=''; answered=true; guess.blur();
+    const tG=tFromPct(lastGuess);
+    lineGuess.setAttribute('y1',yOf(tG)); lineGuess.setAttribute('y2',yOf(tG));
+    tagGuess.querySelector('span').textContent=f1(lastGuess);
+    const yG=H-yOf(tG);
+    const th=Math.max(tagReal.offsetHeight,tagGuess.offsetHeight);
+    const realIsHi=real>=lastGuess;
+    const hiTag=realIsHi?tagReal:tagGuess, loTag=realIsHi?tagGuess:tagReal;
+    const yHi=Math.max(yR,yG), yLo=Math.min(yR,yG);
+    let hiB, loB;
+    if(yHi+m+th<=H && yLo-m-th>=0){ hiB=yHi+m; loB=yLo-m-th; }
+    else if(yHi+m+th>H && yHi-m-th>=yLo+m && yLo-m-th>=0){ hiB=yHi-m-th; loB=yLo-m-th; }
+    else if(yLo-m-th<0 && yLo+m+th<=yHi-m && yHi+m+th<=H){ hiB=yHi+m; loB=yLo+m; }
+    else if(yLo-m-2*th-2>=0){ hiB=yLo-m-th; loB=yLo-m-2*th-2; }
+    else { loB=yHi+m; hiB=yHi+m+th+2; }
+    hiTag.style.bottom=hiB+'px'; loTag.style.bottom=loB+'px';
+  }
 
-    const diff = Math.abs(g-real);
-    const [color,label] = sev(diff);
-    app.style.setProperty('--sev',color);
-
-    mReal.style.bottom = real+'%'; mGuess.style.bottom = g+'%';
-    // Etiquetas dentro del tubo: nunca tapan la otra línea ni la otra etiqueta.
-    // La etiqueta del valor mayor va sobre su línea y la del menor, bajo la suya.
-    // Si no cabe (cerca del borde), van lado a lado lejos de ambas líneas.
-    tagReal.querySelector('span').textContent = real.toFixed(1).replace('.',',')+'%';
-    tagGuess.querySelector('span').textContent = g.toFixed(1).replace('.',',')+'%';
-    const H = tube.clientHeight, m = 4;
-    const th = Math.max(tagReal.offsetHeight, tagGuess.offsetHeight);
-    const realIsHi = real >= g;
-    const hiTag = realIsHi ? tagReal : tagGuess, loTag = realIsHi ? tagGuess : tagReal;
-    const yHi = H*Math.max(real,g)/100, yLo = H*Math.min(real,g)/100;
-    let hiB, loB, side = false;
-    if (yHi + m + th <= H && yLo - m - th >= 0){          // caso normal
-      hiB = yHi + m; loB = yLo - m - th;
-    } else if (yHi + m + th > H && yHi - m - th >= yLo + m && yLo - m - th >= 0){ // arriba: ambas bajo su línea
-      hiB = yHi - m - th; loB = yLo - m - th;
-    } else if (yLo - m - th < 0 && yLo + m + th <= yHi - m && yHi + m + th <= H){ // abajo: ambas sobre su línea
-      hiB = yHi + m; loB = yLo + m;
-    } else if (yLo - m - 2*th - 2 >= 0){                  // apiladas bajo ambas líneas
-      hiB = yLo - m - th; loB = yLo - m - 2*th - 2;
-    } else {                                              // apiladas sobre ambas líneas
-      loB = yHi + m; hiB = yHi + m + th + 2;
-    }
-    hiTag.style.bottom = hiB+'px'; loTag.style.bottom = loB+'px';
-    tagReal.style.left  = side ? '28%' : '50%';
-    tagGuess.style.left = side ? '72%' : '50%';
-
-    $('verdict').textContent = label;
-    $('rErr').textContent = (g>real ? '+' : g<real ? '−' : '') + fmt(diff)+'%';
-    // Tu y Real siempre con un decimal (ej.: 40,0%)
-    const f1 = x => x.toFixed(1).replace('.',',')+'%';
-    [['rGuess',g],['rReal',real]].forEach(([id,v])=>{
-      const el=$(id); el.textContent=f1(v); el.style.fontSize='';
-    });
-
-    app.classList.add('revealed');
-    // Achica la cifra si no cabe en su caja
+  function fitNumbers(){
     ['rGuess','rReal'].forEach(id=>{
-      const el=$(id); let fs=parseFloat(getComputedStyle(el).fontSize);
-      while (el.scrollWidth > el.clientWidth && fs > 10){ fs -= 1; el.style.fontSize = fs+'px'; }
+      const e=$(id); e.style.fontSize=''; let fs=parseFloat(getComputedStyle(e).fontSize);
+      while(e.scrollWidth>e.clientWidth && fs>10){ fs-=1; e.style.fontSize=fs+'px'; }
     });
-    fitSide();
-    guess.disabled=true; btnGo.disabled=true;
-    btnNew.classList.add('pulse');
+  }
+
+  function reveal(g){
+    stopTimer(); lastGuess=g; setState('revealed');
+    guess.disabled=true; btnGo.disabled=true; btnNew.classList.add('pulse');
+    let color, label;
+    if(g===null){
+      color='var(--bad)'; label='¡Se acabó el tiempo!';
+      $('rGuess').textContent='—'; $('rErr').textContent='—';
+      vessel.classList.add('show-real');
+    } else {
+      const d=round1(g-real), diff=Math.abs(d);
+      [color,label]=sev(diff);
+      $('rGuess').textContent=f1(g);
+      $('rErr').textContent=(d>0?'+':d<0?'−':'')+fmt(diff)+'%';
+      vessel.classList.add('show-real','show-guess');
+    }
+    app.style.setProperty('--sev',color);
+    $('verdict').textContent=label;
+    $('rReal').textContent=f1(real);
+    placeMarks(); fitNumbers(); fitSide();
+  }
+  function timeUp(){ if(state!=='playing') return; guess.blur(); reveal(null); }
+
+  // Solo números y, según la precisión, un decimal
+  guess.addEventListener('input',()=>{
+    let v=guess.value.replace('.',',').replace(cfg.prec===1 ? /[^\d]/g : /[^\d,]/g,'');
+    const i=v.indexOf(',');
+    if(i>=0) v=v.slice(0,i+1)+v.slice(i+1).replace(/,/g,'').slice(0,1);
+    guess.value=v;
+  });
+
+  form.addEventListener('submit',e=>{
+    e.preventDefault();
+    if(state!=='playing') return;
+    const raw=guess.value.trim().replace(',','.'), g=Number(raw), step=cfg.prec;
+    const ok = raw!=='' && isFinite(g) && g>=1 && g<=100 && Math.abs(Math.round(g/step)*step-g)<1e-9;
+    if(!ok){ hint.classList.remove('info'); hint.textContent=PREC[step].hint; return; }
+    guess.blur(); reveal(round1(g));
   });
 
   btnNew.addEventListener('click', newChallenge);
-  newChallenge();
+  addEventListener('resize',()=>{ fitVessel(); if(state==='revealed') fitSide(); });
+
+  /* ---------- Clave de letras: CONFIGURACION ---------- */
+  const WORD='CONFIGURACION', KEY='NOICARUGIFNCO';
+  let typed='';
+  const lettersEl=$('letters'), dotsEl=$('dots');
+  WORD.split('').forEach(ch=>{
+    const b=document.createElement('button'); b.type='button'; b.textContent=ch;
+    b.addEventListener('click',()=>press(ch)); lettersEl.appendChild(b);
+  });
+  function drawDots(){ dotsEl.innerHTML=KEY.split('').map((_,i)=>'<i class="'+(i<typed.length?'on':'')+'"></i>').join(''); }
+  function press(ch){
+    typed+=ch;
+    if(KEY.slice(0,typed.length)!==typed){
+      typed=''; const p=$('lockPanel'); p.classList.remove('shake'); void p.offsetWidth; p.classList.add('shake');
+      drawDots(); return;
+    }
+    drawDots();
+    if(typed===KEY){ typed=''; $('lockOv').hidden=true; openCfg(); }
+  }
+  $('cfgBtn').addEventListener('click',()=>{ typed=''; drawDots(); $('lockOv').hidden=false; });
+  $('lockCancel').addEventListener('click',()=>{ $('lockOv').hidden=true; });
+
+  /* ---------- Ventana de configuración ---------- */
+  const cfgForm=$('cfgForm');
+  function openCfg(){
+    cfgForm.querySelector(`input[name=prec][value="${cfg.prec}"]`).checked=true;
+    cfgForm.querySelector(`input[name=shape][value="${cfg.shape}"]`).checked=true;
+    cfgForm.querySelector(`input[name=time][value="${cfg.time}"]`).checked=true;
+    $('cfgOv').hidden=false;
+  }
+  $('cfgCancel').addEventListener('click',()=>{ $('cfgOv').hidden=true; });
+  cfgForm.addEventListener('submit',e=>{
+    e.preventDefault();
+    const fd=new FormData(cfgForm);
+    cfg={prec:Number(fd.get('prec')), shape:fd.get('shape'), time:Number(fd.get('time'))};
+    saveCfg(); $('cfgOv').hidden=true; toIdle();
+  });
+
+  function toIdle(){
+    stopTimer(); real=null; lastGuess=null; setState('idle'); resetVisuals();
+    guess.value=''; guess.disabled=true; btnNew.classList.add('pulse');
+    buildShape(); applyTexts(); level=0; fitVessel();
+    hint.classList.add('info'); hint.textContent='Presiona Nuevo DESAFÍO para comenzar.';
+  }
+
+  /* Inicio */
+  if(!PREC[cfg.prec]) cfg.prec=DEFAULTS.prec;
+  if(!SHAPES[cfg.shape]) cfg.shape=DEFAULTS.shape;
+  if(![10,15,20,25,30].includes(cfg.time)) cfg.time=DEFAULTS.time;
+  toIdle();
 })();
 </script>
 </body>
