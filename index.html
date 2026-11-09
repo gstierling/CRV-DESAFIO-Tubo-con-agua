@@ -521,32 +521,70 @@ header .intro .sub small{font-size:.8em;font-weight:800}
     })(t0);
   }
   /* ---------- Cápsulas (Frasco New Science) ---------- */
-  const CAP_H = 0.15;   // alto de cada cápsula respecto del ancho del frasco
+  const CAP_H = 0.13;   // alto de cada cápsula respecto del ancho del frasco
   function rngFrom(seed){ return ()=>{ seed|=0; seed=seed+0x6D2B79F5|0; let t=Math.imul(seed^seed>>>15,1|seed);
     t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+  /* Montón desordenado: cada cápsula cae con un ángulo al azar y se queda donde apoya
+     (sobre el fondo o sobre otras cápsulas). Entre varios intentos se elige el más bajo,
+     para que el montón quede compacto. Todo en px con altura medida desde el fondo. */
+  let pile=null;   // cápsulas en coordenadas relativas: x/W, y/alto útil, rx/W, ry/W, rot (grados)
+  function ellCols(rx,ry,deg){
+    const th=deg*Math.PI/180, c=Math.cos(th), sn=Math.sin(th);
+    const A=sn*sn/(rx*rx)+c*c/(ry*ry), half=Math.sqrt(rx*rx*c*c+ry*ry*sn*sn), cols=[];
+    for(let u=-Math.floor(half); u<=Math.floor(half); u++){
+      const B=2*u*c*sn*(1/(rx*rx)-1/(ry*ry)), C=u*u*(c*c/(rx*rx)+sn*sn/(ry*ry))-1, D=B*B-4*A*C;
+      if(D<0) continue;
+      const r=Math.sqrt(D); cols.push([u,(-B-r)/(2*A),(-B+r)/(2*A)]);   // [columna, abajo, arriba]
+    }
+    return {cols, top:Math.max(...cols.map(c=>c[2]))};
+  }
+  function buildPile(targetPct){
+    const rnd=rngFrom(capSeed), Hb=H-TOP-SW, cx=W/2, x0=Math.round(cx-W/2);
+    const ry=W*CAP_H*0.5, rx=ry*2.15;
+    const T=tFromPct(targetPct)*Hb;                      // altura objetivo del montón
+    const hm=new Float64Array(Math.ceil(W)+2);           // altura del montón en cada columna
+    const inside=(x,h)=>Math.abs(x-cx) <= xHalf(Math.min(1,Math.max(0,h/Hb)))-1;
+    const items=[]; let fails=0;
+    while(fails<40 && items.length<400){
+      let best=null;
+      for(let k=0;k<26;k++){
+        const deg = rnd()<0.7 ? (rnd()-.5)*70 : (rnd()-.5)*180;   // la mayoría algo inclinadas, algunas muy giradas
+        const e=ellCols(rx,ry,deg);
+        const xc=cx+(rnd()*2-1)*(W/2);
+        let yc=-Infinity, ok=true;
+        for(const [u,b] of e.cols){ const xi=Math.round(xc+u)-x0; if(xi<0||xi>=hm.length){ ok=false; break; } yc=Math.max(yc, hm[xi]-b); }
+        if(!ok) continue;
+        for(const [u,b,t] of e.cols){ const x=xc+u; if(!inside(x,yc+b)||!inside(x,yc+t)||!inside(x,yc+(b+t)/2)){ ok=false; break; } }
+        if(!ok) continue;
+        if(yc+e.top > T) continue;
+        if(!best || yc<best.yc) best={xc,yc,deg,e};
+      }
+      if(!best){ fails++; continue; }
+      fails=0;
+      for(const [u,b,t] of best.e.cols){ const xi=Math.round(best.xc+u)-x0; hm[xi]=Math.max(hm[xi], best.yc+t); }
+      items.push({x:best.xc, y:best.yc, deg:best.deg, top:best.e.top});
+    }
+    if(!items.length){ const e=ellCols(rx,ry,0); items.push({x:cx,y:-e.cols[Math.floor(e.cols.length/2)][1],deg:0,top:e.top}); }
+    // Porcentaje real = volumen hasta la parte superior de la cápsula más alta (redondeado a la precisión)
+    const P=Math.max(...items.map(i=>i.y+i.top));
+    const step=cfg.prec;
+    let pct=Math.round(cum[Math.min(N,Math.round(P/Hb*N))]*100/step)*step;
+    pct=round1(Math.min(100-step, Math.max(step, pct)));
+    // Ajuste mínimo de alturas para que la cápsula más alta toque exactamente ese nivel
+    const L=tFromPct(pct)*Hb;
+    let sc=Infinity; items.forEach(i=>{ if(i.y>0) sc=Math.min(sc,(L-i.top)/i.y); });
+    if(!isFinite(sc)) sc=1;
+    items.forEach(i=>{ i.y*=sc; });
+    const topNow=Math.max(...items.map(i=>i.y+i.top)), lift=L-topNow;
+    pile=items.map(i=>({x:i.x/W, y:(i.y+lift)/Hb, rx:rx/W, ry:ry/W, rot:-i.deg}));
+    return pct;
+  }
+
   function layCapsules(animate){
     capsG.innerHTML=''; capLine.setAttribute('opacity',0);
-    if(level<=0) return;
-    const rnd=rngFrom(capSeed), cx=W/2;
-    const bottomY=yOf(0), topY=yOf(level), levelPx=bottomY-topY;
-    const n=Math.max(1, Math.round(levelPx/(W*CAP_H))), rowH=levelPx/n;
-    const ry=rowH*0.5, rx0=ry*2.15, items=[];
-    for(let j=0;j<n;j++){
-      const yC=bottomY-(j+.5)*rowH, top=(j===n-1);
-      const half=Math.min(xHalf(level*j/n), xHalf(level*(j+1)/n))-1.5;
-      // cantidad por fila que mejor llena el ancho; el largo se ajusta levemente para no dejar huecos
-      let cnt=Math.max(1, Math.round(2*half/(2*rx0)));
-      let rx=Math.min(half/cnt*0.96, rx0*1.25);
-      if(top && cnt>1) cnt=Math.max(1, Math.round(cnt*(0.55+rnd()*0.45)));   // última fila incompleta, como un montón
-      const free=2*half-cnt*2*rx, w=[]; let sw=0;
-      for(let k=0;k<=cnt;k++){ const v=0.3+rnd(); w.push(v); sw+=v; }
-      let x=cx-half;
-      for(let k=0;k<cnt;k++){
-        x+=free*w[k]/sw;
-        items.push({x:x+rx, y:yC+(top?0:(rnd()-.5)*rowH*0.1), rx, ry, rot:top?0:(rnd()-.5)*14});
-        x+=2*rx;
-      }
-    }
+    if(level<=0 || !pile) return;
+    const bottomY=yOf(0), topY=yOf(level), Hb=H-TOP-SW;
+    const items=pile.map(c=>({x:c.x*W, y:bottomY-c.y*Hb, rx:c.rx*W, ry:c.ry*W, rot:c.rot}));
     const nodes=items.map(it=>{
       const gC=el('g',{},capsG);
       el('ellipse',{cx:0,cy:0,rx:it.rx,ry:it.ry,fill:'url(#gcp)',stroke:'#7A4306','stroke-width':.6},gC);
@@ -600,7 +638,15 @@ header .intro .sub small{font-size:.8em;font-weight:800}
   function fitTexts(){
     [document.querySelector('header h1'), $('question'), $('precText'), $('examples'), btnNew, document.querySelector('.timer-top span')].forEach(e=>{
       e.style.fontSize=''; let fs=parseFloat(getComputedStyle(e).fontSize);
-      while(e.scrollWidth>e.clientWidth+1 && fs>8){ fs-=0.5; e.style.fontSize=fs+'px'; }
+      // Mide el ancho real del texto contra el espacio interior de su caja (sin el relleno)
+      const range=document.createRange();
+      const tooWide=()=>{
+        const cs=getComputedStyle(e);
+        const room=e.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight);
+        range.selectNodeContents(e);
+        return range.getBoundingClientRect().width > room+0.5;
+      };
+      while(tooWide() && fs>8){ fs-=0.5; e.style.fontSize=fs+'px'; }
     });
   }
 
@@ -674,7 +720,10 @@ header .intro .sub small{font-size:.8em;font-weight:800}
 
   function newChallenge(){
     shuffleRefs(); resetVisuals();
-    real=randomReal(); capSeed=(Math.random()*1e9)|0; lastGuess=null; setState('playing');
+    capSeed=(Math.random()*1e9)|0; pile=null;
+    real=randomReal();
+    if(shape.capsules) real=buildPile(real);   // el montón define el nivel real
+    lastGuess=null; setState('playing');
     guess.value=''; guess.disabled=false; btnGo.disabled=false;
     btnNew.classList.remove('pulse');
     setWater(0,false); bubblesG.innerHTML='';
@@ -845,6 +894,15 @@ header .intro .sub small{font-size:.8em;font-weight:800}
   if(!SHAPES[cfg.shape]) cfg.shape=DEFAULTS.shape;
   if(![10,15,20,25,30,40,50,60,90].includes(cfg.time)) cfg.time=DEFAULTS.time;
   toIdle();
+
+  // La letra Nunito llega desde internet un instante después: al cargar, se vuelven a ajustar
+  // los textos de una línea para que nada se salga de su caja.
+  const refit=()=>{ fitTexts(); if(state==='revealed'){ fitNumbers(); fitSide(); } };
+  if(document.fonts){
+    document.fonts.ready.then(refit);
+    document.fonts.addEventListener && document.fonts.addEventListener('loadingdone', refit);
+  }
+  [300,1000,2500].forEach(ms=>setTimeout(refit, ms));
 })();
 </script>
 </body>
