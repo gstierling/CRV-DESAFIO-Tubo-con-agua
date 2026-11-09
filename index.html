@@ -70,13 +70,13 @@ button{font-family:var(--font)}
 
 header h1{
   font-weight:900;font-size:1.6rem;line-height:1.08;letter-spacing:-.01em;margin:0;
-  text-wrap:balance;text-align:center;
+  white-space:nowrap;text-align:center;
 }
 header h1 em{font-style:normal;color:var(--water-hi)}
 header .intro{margin-top:.5rem;font-size:.95rem;text-align:center}
 header .intro p{margin:0;line-height:1.3}
-header .intro .q{color:var(--ink);font-weight:800}
-header .intro .sub{display:inline-block;margin-top:.45rem;padding:.25em .8em;border-radius:2rem;
+header .intro .q{color:var(--ink);font-weight:800;white-space:nowrap}
+header .intro .sub{display:inline-block;max-width:100%;white-space:nowrap;overflow:hidden;margin-top:.45rem;padding:.25em .8em;border-radius:2rem;
   background:#FFC857;color:#1A1200;font-weight:900;font-size:1em;line-height:1.2;box-shadow:0 0 1rem rgba(255,200,87,.35)}
 header .intro .sub b{font-size:1.3em;font-weight:900}
 header .intro .sub small{font-size:.8em;font-weight:800}
@@ -85,11 +85,12 @@ header .intro .sub small{font-size:.8em;font-weight:800}
   background:rgba(127,227,255,.10);border:1px solid rgba(127,227,255,.35);
   font-size:.95rem;font-weight:900;text-align:center;
 }
-.examples .nums{overflow:hidden;display:flex;gap:.15em;justify-content:space-between;align-items:baseline;margin-top:.2rem;font-size:1.15rem}
+.examples{display:flex;justify-content:center;align-items:baseline;gap:.3em;white-space:nowrap;font-size:1.15rem}
+.examples .lbl{color:var(--ink)}
 .examples b{font-weight:900;color:var(--water-hi)}
 .examples i{font-style:normal;font-weight:900;color:var(--guess)}
 
-.controls{display:grid;grid-template-columns:minmax(0,1fr);gap:.6rem;transition:margin-top .5s cubic-bezier(.3,.9,.3,1)}
+.controls{display:grid;grid-template-columns:minmax(0,1fr);gap:.6rem}
 
 /* Tiempo disponible */
 .timer{display:grid;grid-template-columns:minmax(0,1fr);gap:.3rem}
@@ -108,17 +109,20 @@ header .intro .sub small{font-size:.8em;font-weight:800}
   background:#EAF4FB;border:2px solid #FFFFFF;transition:box-shadow .2s,opacity .2s;
 }
 .box:focus-within{box-shadow:0 0 0 .2rem var(--water-hi)}
-.box input{
-  flex:1 1 0;min-width:0;width:0;border:0;outline:0;background:transparent;color:#0B1622;
-  font-family:var(--font);font-weight:900;font-size:2.375rem;padding:.1rem 1.9rem;text-align:center;
+.disp{
+  flex:1 1 0;min-width:0;display:flex;align-items:center;justify-content:center;
+  padding:.1rem 1.9rem .1rem .8rem;color:#0B1622;font-weight:900;font-size:2.375rem;line-height:1.1;white-space:nowrap;
 }
-.box input::placeholder{color:#9DB2C4}
-.box input:disabled{color:#0B1622;-webkit-text-fill-color:#0B1622;opacity:1}
+.disp .ph{display:none;font-size:.8rem;font-weight:800;color:#8197AA;line-height:1.15;white-space:normal;text-align:left;margin-left:.35rem}
+.box.empty .ph{display:block}
+.caret{display:inline-block;flex:none;width:3px;height:1.05em;background:#0B1622;margin:0 1px;visibility:hidden;animation:blink 1s steps(1) infinite}
+.box.empty .caret{height:1.6rem}
+.box.typing .caret{visibility:visible}
+@keyframes blink{50%{opacity:0}}
 .box .pct{position:absolute;right:.85rem;top:50%;transform:translateY(-50%);font-size:1.4rem;color:#4A6378;pointer-events:none}
 .idle .box{opacity:.45}
 .box{cursor:pointer}
 .box.active{box-shadow:0 0 0 .2rem var(--water-hi)}
-.box input{cursor:pointer;caret-color:transparent}
 .keypad{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.4rem}
 .keypad[hidden]{display:none}
 .side.kp .cfg-btn{display:none}   /* con el teclado abierto se oculta Configuración */
@@ -151,7 +155,9 @@ header .intro .sub small{font-size:.8em;font-weight:800}
 .hint.info{color:var(--muted)}
 
 /* Resultado */
-.result{display:none;flex-direction:column;gap:.6rem;margin-top:2.1rem}
+.result{display:none;flex-direction:column;gap:.6rem;margin-top:2.1rem;padding:.75rem .6rem .7rem;border-radius:1rem;
+  background:#0E2438;border:2px solid var(--sev);box-shadow:0 .6rem 1.6rem rgba(0,0,0,.45)}
+.card.miss{background:#0B1622}
 .revealed .result{display:flex;animation:fadeIn .5s .3s both}
 @keyframes fadeIn{from{opacity:0;transform:translateY(.6rem)}to{opacity:1;transform:none}}
 .verdict{font-weight:900;font-size:1.35rem;line-height:1.1;margin:0;color:var(--sev);text-align:center}
@@ -246,10 +252,10 @@ header .intro .sub small{font-size:.8em;font-weight:800}
     <header>
       <h1>¡Acierta el <em>%</em> y gana!</h1>
       <div class="intro" id="intro">
-        <p class="q" id="question">¿Qué porcentaje del tubo está lleno?</p>
+        <p class="q" id="question">¿Qué porcentaje está lleno?</p>
         <p class="sub" id="precText">Precisión: <b>0,5</b></p>
       </div>
-      <div class="examples">Ejemplos:<div class="nums" id="examples"></div></div>
+      <div class="examples" id="examples"></div>
     </header>
 
     <form class="controls" id="form" novalidate>
@@ -258,7 +264,7 @@ header .intro .sub small{font-size:.8em;font-weight:800}
         <div class="bar"><i id="tBar"></i></div>
       </div>
       <div class="box" id="box">
-        <input id="guess" type="text" inputmode="none" readonly maxlength="4" size="4" placeholder="00" autocomplete="off" aria-label="Tu estimación en porcentaje" disabled>
+        <div class="disp" aria-label="Tu estimación en porcentaje"><span id="val"></span><i class="caret"></i><span class="ph" id="ph"></span></div>
         <span class="pct">%</span>
       </div>
       <div class="keypad" id="keypad" hidden>
@@ -319,7 +325,8 @@ header .intro .sub small{font-size:.8em;font-weight:800}
       <label><input type="radio" name="time" value="30"><span>30 segundos</span></label>
       <label><input type="radio" name="time" value="40"><span>40 segundos</span></label>
       <label><input type="radio" name="time" value="50"><span>50 segundos</span></label>
-      <label><input type="radio" name="time" value="60"><span>1 minuto</span></label>
+      <label><input type="radio" name="time" value="60"><span>60 segundos</span></label>
+      <label><input type="radio" name="time" value="90"><span>90 segundos</span></label>
     </div></div>
     <div class="row2">
       <button class="btn btn-sec" id="cfgCancel" type="button">Cancelar</button>
@@ -334,7 +341,13 @@ header .intro .sub small{font-size:.8em;font-weight:800}
   const NS = 'http://www.w3.org/2000/svg';
   const app=$('app'), side=$('side'), stagecol=$('stagecol'), vessel=$('vessel'), svg=$('svg');
   const tagReal=$('tagReal'), tagGuess=$('tagGuess');
-  const guess=$('guess'), hint=$('hint'), btnGo=$('btnGo'), btnNew=$('btnNew'), form=$('form');
+  const box=$('box');
+  // Valor ingresado (se muestra con cursor propio; nunca abre el teclado del sistema)
+  const guess={ _v:'', _d:true,
+    get value(){return this._v}, set value(v){ this._v=v; $('val').textContent=v; box.classList.toggle('empty', v===''); },
+    get disabled(){return this._d}, set disabled(d){ this._d=d; box.classList.toggle('typing', !d); },
+    blur(){} };
+  const hint=$('hint'), btnGo=$('btnGo'), btnNew=$('btnNew'), form=$('form');
   const finePointer = matchMedia('(pointer:fine)').matches;
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -349,7 +362,6 @@ header .intro .sub small{font-size:.8em;font-weight:800}
     0.5: {text:'Precisión: <b>0,5</b>',        ex:['32','73,5','8','29,5'], hint:'Usa un número del 1 al 100, entero o terminado en ,5 (ej.: 73,5).'},
     0.1: {text:'Precisión: <b>0,1</b>',        ex:['32','73,4','8','29,7'], hint:'Usa un número del 1 al 100 con hasta un decimal (ej.: 73,4).'}
   };
-  const QUESTION = {tubo:'del tubo', pecera:'de la pecera', matraz:'del matraz', ondulado:'del recipiente'};
 
   /* ---------- Formas: radio relativo r(t), t = 0 abajo … 1 arriba ---------- */
   function interp(pts, smooth){
@@ -486,15 +498,15 @@ header .intro .sub small{font-size:.8em;font-weight:800}
   function applyTexts(){
     const p=PREC[cfg.prec];
     $('precText').innerHTML=p.text;
-    $('question').textContent='¿Qué porcentaje '+QUESTION[cfg.shape]+' está lleno?';
-    $('examples').innerHTML=p.ex.map(x=>'<b>'+x+'</b>').join('<i>/</i>');
+    $('examples').innerHTML='<span class="lbl">Ej:</span> '+p.ex.map(x=>'<b>'+x+'</b>').join('<i>/</i>');
+    $('ph').textContent = cfg.prec===1 ? 'Ingresa número SIN decimal' : 'Ingresa número CON decimal';
     $('kDec').disabled = cfg.prec===1;
     showTime(cfg.time*1000);
   }
 
   /* Achica textos que no caben en una línea (columna angosta) */
   function fitTexts(){
-    [$('examples'), btnNew, document.querySelector('.timer-top span')].forEach(e=>{
+    [document.querySelector('header h1'), $('question'), $('precText'), $('examples'), btnNew, document.querySelector('.timer-top span')].forEach(e=>{
       e.style.fontSize=''; let fs=parseFloat(getComputedStyle(e).fontSize);
       while(e.scrollWidth>e.clientWidth+1 && fs>8){ fs-=0.5; e.style.fontSize=fs+'px'; }
     });
@@ -502,16 +514,18 @@ header .intro .sub small{font-size:.8em;font-weight:800}
 
   /* Cambia tamaño del texto y posición de los controles en cada desafío */
   const intro=$('intro');
+  const MIN_GAP_REM=1.3;
   function shuffleRefs(){
     intro.style.fontSize=(0.85+Math.random()*0.24).toFixed(3)+'rem';
-    form.style.marginTop=(Math.random()*7).toFixed(2)+'rem';
+    form.style.marginTop=(MIN_GAP_REM+Math.random()*6).toFixed(2)+'rem';   // siempre deja un espacio claro bajo los ejemplos
+    fitTexts();
   }
   function fitSide(){
     const over=side.scrollHeight-side.clientHeight;
     if(over>0){
       const cur=parseFloat(getComputedStyle(form).marginTop)||0;
-      form.style.transition='none'; form.style.marginTop=Math.max(0,cur-over)+'px';
-      void form.offsetHeight; form.style.transition='';
+      const minGap=MIN_GAP_REM*parseFloat(getComputedStyle(document.documentElement).fontSize);
+      form.style.marginTop=Math.max(minGap,cur-over)+'px';
     }
     if(side.scrollHeight>side.clientHeight) side.classList.add('tight');
     if(side.scrollHeight>side.clientHeight) side.scrollTop=side.scrollHeight;
@@ -567,7 +581,7 @@ header .intro .sub small{font-size:.8em;font-weight:800}
     setWater(0,false); bubblesG.innerHTML='';
     requestAnimationFrame(()=>{ setWater(tFromPct(real), true); setTimeout(bubbles,50); });
     startTimer();
-    closeKeypad();
+    openKeypad();
   }
 
   function sev(err){
@@ -636,7 +650,7 @@ header .intro .sub small{font-size:.8em;font-weight:800}
   function timeUp(){ if(state!=='playing') return; guess.blur(); reveal(null); }
 
   /* ---------- Teclado propio (números y decimal) ---------- */
-  const keypad=$('keypad'), box=$('box');
+  const keypad=$('keypad');
   function openKeypad(){
     if(state!=='playing') return;
     keypad.hidden=false; box.classList.add('active'); side.classList.add('kp'); fitSide();
@@ -730,7 +744,7 @@ header .intro .sub small{font-size:.8em;font-weight:800}
   /* Inicio */
   if(!PREC[cfg.prec]) cfg.prec=DEFAULTS.prec;
   if(!SHAPES[cfg.shape]) cfg.shape=DEFAULTS.shape;
-  if(![10,15,20,25,30,40,50,60].includes(cfg.time)) cfg.time=DEFAULTS.time;
+  if(![10,15,20,25,30,40,50,60,90].includes(cfg.time)) cfg.time=DEFAULTS.time;
   toIdle();
 })();
 </script>
