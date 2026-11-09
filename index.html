@@ -116,6 +116,22 @@ header .intro .sub small{font-size:.8em;font-weight:800}
 .box input:disabled{color:#0B1622;-webkit-text-fill-color:#0B1622;opacity:1}
 .box .pct{position:absolute;right:.85rem;top:50%;transform:translateY(-50%);font-size:1.4rem;color:#4A6378;pointer-events:none}
 .idle .box{opacity:.45}
+.box{cursor:pointer}
+.box.active{box-shadow:0 0 0 .2rem var(--water-hi)}
+.box input{cursor:pointer;caret-color:transparent}
+.keypad{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.4rem}
+.keypad[hidden]{display:none}
+.side.kp .cfg-btn{display:none}   /* con el teclado abierto se oculta Configuración */
+.keypad button{
+  min-height:2.9rem;border:0;border-radius:.6rem;background:#FFFFFF;color:#0B1622;
+  font-size:1.6rem;font-weight:900;line-height:1;cursor:pointer;touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;box-shadow:0 .15rem 0 #9DB2C4;
+}
+.keypad button:active{transform:translateY(2px);box-shadow:none;background:#D6ECFA}
+.keypad button:disabled{opacity:.25;cursor:not-allowed}
+.keypad .k-del{background:#2A4058;color:#FFFFFF;box-shadow:0 .15rem 0 #10202F}
+.side.tight .keypad{gap:.3rem}
+.side.tight .keypad button{min-height:2.4rem;font-size:1.35rem}
 
 .btn{
   width:100%;font-weight:800;font-size:1.1rem;letter-spacing:.01em;cursor:pointer;
@@ -172,7 +188,7 @@ header .intro .sub small{font-size:.8em;font-weight:800}
 /* Ventanas de clave y configuración */
 .overlay{
   position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;
-  background:rgba(4,10,16,.82);padding:1rem;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+  background:rgba(4,10,16,.82);padding:.6rem;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
 }
 .overlay[hidden]{display:none}
 .panel{
@@ -181,11 +197,12 @@ header .intro .sub small{font-size:.8em;font-weight:800}
 }
 .panel h2{margin:0 0 .3rem;font-size:1.3rem;font-weight:900;text-align:center}
 .panel p.help{margin:0 0 .9rem;font-size:.85rem;color:var(--muted);text-align:center}
-.letters{display:flex;flex-wrap:wrap;justify-content:center;gap:.4rem}
+.letters{display:flex;flex-wrap:nowrap;justify-content:center;gap:.2rem}
 .letters button{
-  width:2.6rem;height:3rem;border-radius:.55rem;border:2px solid var(--line);background:var(--bg);
-  color:var(--ink);font-size:1.4rem;font-weight:900;cursor:pointer;touch-action:manipulation;
+  flex:1 1 0;min-width:0;max-width:2.4rem;height:3rem;padding:0;border-radius:.45rem;border:1.5px solid var(--line);
+  background:var(--bg);color:var(--ink);font-size:1.15rem;font-weight:900;cursor:pointer;touch-action:manipulation;
 }
+#lockPanel{padding:1rem .6rem}
 .letters button:active{background:var(--water);color:#04101C}
 .dots{display:flex;justify-content:center;gap:.3rem;margin:.9rem 0 .2rem}
 .dots i{width:.55rem;height:.55rem;border-radius:50%;background:var(--line)}
@@ -240,10 +257,16 @@ header .intro .sub small{font-size:.8em;font-weight:800}
         <div class="timer-top"><span>Tiempo disponible</span><b id="tLeft">60<small>s</small></b></div>
         <div class="bar"><i id="tBar"></i></div>
       </div>
-      <label class="box" for="guess">
-        <input id="guess" type="text" inputmode="decimal" maxlength="4" size="4" placeholder="00" autocomplete="off" enterkeyhint="go" aria-label="Tu estimación en porcentaje" disabled>
+      <div class="box" id="box">
+        <input id="guess" type="text" inputmode="none" readonly maxlength="4" size="4" placeholder="00" autocomplete="off" aria-label="Tu estimación en porcentaje" disabled>
         <span class="pct">%</span>
-      </label>
+      </div>
+      <div class="keypad" id="keypad" hidden>
+        <button type="button" data-k="1">1</button><button type="button" data-k="2">2</button><button type="button" data-k="3">3</button>
+        <button type="button" data-k="4">4</button><button type="button" data-k="5">5</button><button type="button" data-k="6">6</button>
+        <button type="button" data-k="7">7</button><button type="button" data-k="8">8</button><button type="button" data-k="9">9</button>
+        <button type="button" data-k="," id="kDec" aria-label="Decimal">,</button><button type="button" data-k="0">0</button><button type="button" data-k="del" class="k-del" aria-label="Borrar">⌫</button>
+      </div>
       <p class="hint" id="hint" role="alert"></p>
       <button class="btn btn-go" id="btnGo" type="submit">Ingresar</button>
       <button class="btn btn-new pulse" id="btnNew" type="button">Nuevo DESAFÍO</button>
@@ -465,8 +488,7 @@ header .intro .sub small{font-size:.8em;font-weight:800}
     $('precText').innerHTML=p.text;
     $('question').textContent='¿Qué porcentaje '+QUESTION[cfg.shape]+' está lleno?';
     $('examples').innerHTML=p.ex.map(x=>'<b>'+x+'</b>').join('<i>/</i>');
-    guess.setAttribute('inputmode', cfg.prec===1 ? 'numeric' : 'decimal');
-    guess.maxLength = cfg.prec===1 ? 3 : 4;
+    $('kDec').disabled = cfg.prec===1;
     showTime(cfg.time*1000);
   }
 
@@ -545,7 +567,7 @@ header .intro .sub small{font-size:.8em;font-weight:800}
     setWater(0,false); bubblesG.innerHTML='';
     requestAnimationFrame(()=>{ setWater(tFromPct(real), true); setTimeout(bubbles,50); });
     startTimer();
-    if(finePointer) guess.focus({preventScroll:true});
+    closeKeypad();
   }
 
   function sev(err){
@@ -592,7 +614,7 @@ header .intro .sub small{font-size:.8em;font-weight:800}
   }
 
   function reveal(g){
-    stopTimer(); lastGuess=g; setState('revealed');
+    stopTimer(); closeKeypad(); lastGuess=g; setState('revealed');
     guess.disabled=true; btnGo.disabled=true; btnNew.classList.add('pulse');
     let color, label;
     if(g===null){
@@ -613,12 +635,35 @@ header .intro .sub small{font-size:.8em;font-weight:800}
   }
   function timeUp(){ if(state!=='playing') return; guess.blur(); reveal(null); }
 
-  // Solo números y, según la precisión, un decimal
-  guess.addEventListener('input',()=>{
-    let v=guess.value.replace('.',',').replace(cfg.prec===1 ? /[^\d]/g : /[^\d,]/g,'');
-    const i=v.indexOf(',');
-    if(i>=0) v=v.slice(0,i+1)+v.slice(i+1).replace(/,/g,'').slice(0,1);
-    guess.value=v;
+  /* ---------- Teclado propio (números y decimal) ---------- */
+  const keypad=$('keypad'), box=$('box');
+  function openKeypad(){
+    if(state!=='playing') return;
+    keypad.hidden=false; box.classList.add('active'); side.classList.add('kp'); fitSide();
+  }
+  function closeKeypad(){ keypad.hidden=true; box.classList.remove('active'); side.classList.remove('kp'); }
+  function typeKey(k){
+    if(state!=='playing') return;
+    hint.textContent='';
+    let v=guess.value;
+    if(k==='del'){ guess.value=v.slice(0,-1); return; }
+    if(k===','){
+      if(cfg.prec===1 || v==='' || v.includes(',')) return;
+      guess.value=v+','; return;
+    }
+    if(v.includes(',')){ if(v.split(',')[1].length>=1) return; }
+    else if(v.length>=3 || v==='0') return;
+    guess.value=v+k;
+  }
+  box.addEventListener('click', openKeypad);
+  keypad.addEventListener('click',e=>{ const b=e.target.closest('button'); if(b) typeKey(b.dataset.k); });
+  // En computador también se puede usar el teclado físico
+  document.addEventListener('keydown',e=>{
+    if(state!=='playing' || !$('lockOv').hidden || !$('cfgOv').hidden) return;
+    if(/^[0-9]$/.test(e.key)){ openKeypad(); typeKey(e.key); e.preventDefault(); }
+    else if(e.key===','||e.key==='.'){ openKeypad(); typeKey(','); e.preventDefault(); }
+    else if(e.key==='Backspace'){ typeKey('del'); e.preventDefault(); }
+    else if(e.key==='Enter'){ e.preventDefault(); form.requestSubmit(); }
   });
 
   form.addEventListener('submit',e=>{
@@ -677,6 +722,7 @@ header .intro .sub small{font-size:.8em;font-weight:800}
 
   function toIdle(){
     stopTimer(); real=null; lastGuess=null; setState('idle'); resetVisuals();
+    closeKeypad();
     guess.value=''; guess.disabled=true; btnNew.classList.add('pulse');
     buildShape(); applyTexts(); level=0; fitVessel();
   }
