@@ -204,10 +204,10 @@ header .intro .sub small{font-size:.8em;font-weight:800}
 }
 .panel h2{margin:0 0 .3rem;font-size:1.3rem;font-weight:900;text-align:center}
 .panel p.help{margin:0 0 .9rem;font-size:.85rem;color:var(--muted);text-align:center}
-.letters{display:flex;flex-wrap:nowrap;justify-content:center;gap:.2rem}
+.letters{display:flex;flex-wrap:nowrap;justify-content:center;gap:.4rem}
 .letters button{
-  flex:1 1 0;min-width:0;max-width:2.4rem;height:3rem;padding:0;border-radius:.45rem;border:1.5px solid var(--line);
-  background:var(--bg);color:var(--ink);font-size:1.15rem;font-weight:900;cursor:pointer;touch-action:manipulation;
+  flex:1 1 0;min-width:0;max-width:3.2rem;height:3.4rem;padding:0;border-radius:.55rem;border:2px solid var(--line);
+  background:var(--bg);color:var(--ink);font-size:1.6rem;font-weight:900;cursor:pointer;touch-action:manipulation;
 }
 #lockPanel{padding:1rem .6rem}
 .letters button:active{background:var(--water);color:#04101C}
@@ -275,7 +275,7 @@ header .intro .sub small{font-size:.8em;font-weight:800}
         <button type="button" data-k="," id="kDec" aria-label="Decimal">,</button><button type="button" data-k="0">0</button><button type="button" data-k="del" class="k-del" aria-label="Borrar">⌫</button>
       </div>
       <p class="hint" id="hint" role="alert"></p>
-      <button class="btn btn-go" id="btnGo" type="submit">Ingresar</button>
+      <button class="btn btn-go" id="btnGo" type="button">Ingresar</button>
       <button class="btn btn-new pulse" id="btnNew" type="button">Nuevo DESAFÍO</button>
     </form>
 
@@ -413,6 +413,7 @@ header .intro .sub small{font-size:.8em;font-weight:800}
   }
 
   /* ---------- Dibujo del recipiente ---------- */
+  let neonStroke=()=>{};
   let W=100,H=500, TOP=24; const SW=1.5;   // TOP: espacio sobre el 100% (rótulo o tapa)
   let waterRect, surf, lineReal, lineGuess, bubblesG;
   const yOf = t => TOP + SW/2 + (1-t)*(H-TOP-SW);
@@ -471,7 +472,15 @@ header .intro .sub small{font-size:.8em;font-weight:800}
     lineReal=el('line',{x1:0,x2:W,y1:-10,y2:-10,stroke:'#FFFFFF','stroke-width':3,class:'mark real'},g);
     lineGuess=el('line',{x1:0,x2:W,y1:-10,y2:-10,stroke:'#FF7A59','stroke-width':3,'stroke-dasharray':'7 5',class:'mark guess'},g);
     if(shape.art) el('image',{href:shape.art,x:0,y:0,width:W,height:H,preserveAspectRatio:'none',opacity:.6},svg);
-    else el('path',{d:outline,fill:'none',stroke:'rgba(200,230,255,.75)','stroke-width':SW,'stroke-linejoin':'round'},svg);
+    // Borde tipo neón: halo difuso + línea gruesa y brillante (bien visible al sol)
+    const neon=el('filter',{id:'neon',x:'-30%',y:'-10%',width:'160%',height:'120%'},defs);
+    el('feGaussianBlur',{stdDeviation:3.2},neon);
+    const glowW=Math.max(8, W*0.05), coreW=Math.max(3.5, W*0.022);
+    neonStroke=(d,extra)=>{
+      el('path',Object.assign({d,fill:'none',stroke:'#00E5FF','stroke-width':glowW,'stroke-linejoin':'round','stroke-linecap':'round',opacity:.85,filter:'url(#neon)'},extra||{}),svg);
+      el('path',Object.assign({d,fill:'none',stroke:'#A8FCFF','stroke-width':coreW,'stroke-linejoin':'round','stroke-linecap':'round'},extra||{}),svg);
+    };
+    neonStroke(outline);
     // Marca del 100 %: línea en la boca del recipiente y rótulo arriba
     const yTop=yOf(1), hx=xHalf(1);
     el('line',{x1:cx-hx-6,x2:cx+hx+6,y1:yTop,y2:yTop,stroke:'#FFC857','stroke-width':2,'stroke-dasharray':'4 3'},svg);
@@ -481,7 +490,12 @@ header .intro .sub small{font-size:.8em;font-weight:800}
       const cw=shape.cap.w*(W/2-SW), ch=TOP-2;
       const gc=el('linearGradient',{id:'gcap',x1:0,x2:1,y1:0,y2:0},defs);
       [[0,'#8FA3B5'],[.35,'#E8F0F6'],[.6,'#C9D6E1'],[1,'#7D90A2']].forEach(([o,c])=>el('stop',{offset:o,'stop-color':c},gc));
-      if(!shape.art || shape.capFill) el('rect',{opacity:shape.art?.35:1,x:cx-cw,y:yTop-ch,width:2*cw,height:ch,rx:Math.min(4,ch/4),fill:'url(#gcap)',stroke:'rgba(200,230,255,.8)','stroke-width':1},svg);
+      if(!shape.art || shape.capFill)
+        el('rect',{opacity:shape.art?.35:1,x:cx-cw,y:yTop-ch,width:2*cw,height:ch,rx:Math.min(4,ch/4),fill:'url(#gcap)'},svg);
+      { // contorno neón de la tapa (en todos los recipientes con tapa)
+        const r=shape.art&&!shape.capFill ? Math.min(cw*0.45,ch*0.35) : Math.min(4,ch/4), x1=cx-cw, x2=cx+cw, y1=yTop-ch+1.5, y2=yTop;
+        neonStroke(`M${x1},${y2} L${x1},${y1+r} Q${x1},${y1} ${x1+r},${y1} L${x2-r},${y1} Q${x2},${y1} ${x2},${y1+r} L${x2},${y2}`);
+      }
       if(!shape.art) for(let k=1;k<6;k++){ const x=cx-cw+2*cw*k/6; el('line',{x1:x,x2:x,y1:yTop-ch+2,y2:yTop-2,stroke:'rgba(11,22,34,.18)','stroke-width':1},svg); }
       const lx=cx-Math.max(cw,hx)-4;
       const t100=el('text',Object.assign({x:lx,y:yTop-3,'text-anchor':'end'},font),svg); t100.textContent='100%';
@@ -825,23 +839,30 @@ header .intro .sub small{font-size:.8em;font-weight:800}
     if(/^[0-9]$/.test(e.key)){ openKeypad(); typeKey(e.key); e.preventDefault(); }
     else if(e.key===','||e.key==='.'){ openKeypad(); typeKey(','); e.preventDefault(); }
     else if(e.key==='Backspace'){ typeKey('del'); e.preventDefault(); }
-    else if(e.key==='Enter'){ e.preventDefault(); form.requestSubmit(); }
+    else if(e.key==='Enter'){ e.preventDefault(); submitGuess(); }
   });
 
-  form.addEventListener('submit',e=>{
-    e.preventDefault();
+  // Ingresar: se maneja directo con el toque/clic del botón (no depende del envío del formulario)
+  function submitGuess(){
     if(state!=='playing') return;
-    const raw=guess.value.trim().replace(',','.'), g=Number(raw), step=cfg.prec;
-    const ok = raw!=='' && isFinite(g) && g>=1 && g<=100 && Math.abs(Math.round(g/step)*step-g)<1e-9;
-    if(!ok){ hint.classList.remove('info'); hint.textContent=PREC[step].hint; return; }
-    guess.blur(); reveal(round1(g));
-  });
+    const raw=String(guess.value).trim().replace(',','.'), step=Number(cfg.prec);
+    const g=Number(raw.replace(/\.$/,''));
+    hint.classList.remove('info');
+    if(raw===''){ hint.textContent='Primero ingresa un número con el teclado.'; shakeBox(); return; }
+    const ok = isFinite(g) && g>=1 && g<=100 && Math.abs(Math.round(g/step)*step-g)<1e-6;
+    if(!ok){ hint.textContent=PREC[step] ? PREC[step].hint : 'Número no válido.'; shakeBox(); return; }
+    try { reveal(round1(g)); }
+    catch(err){ hint.textContent='Error: '+(err && err.message ? err.message : err); }   // si algo falla, se ve en pantalla
+  }
+  function shakeBox(){ box.classList.remove('shake'); void box.offsetWidth; box.classList.add('shake'); }
+  btnGo.addEventListener('click', submitGuess);
+  form.addEventListener('submit',e=>{ e.preventDefault(); submitGuess(); });
 
   btnNew.addEventListener('click', newChallenge);
   addEventListener('resize',()=>{ fitVessel(); if(state==='revealed') fitSide(); });
 
-  /* ---------- Clave de letras: CONFIGURACION ---------- */
-  const WORD='CONFIGURACION', KEY='NOICARUGIFNCO';
+  /* ---------- Clave de letras: CONFIG (al revés, con las dos últimas invertidas) ---------- */
+  const WORD='CONFIG', KEY='GIFNCO';
   let typed='';
   const lettersEl=$('letters'), dotsEl=$('dots');
   WORD.split('').forEach(ch=>{
