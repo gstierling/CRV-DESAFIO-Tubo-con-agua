@@ -123,7 +123,6 @@ header .intro .sub small{font-size:.8em;font-weight:800}
 .box.active{box-shadow:0 0 0 .2rem var(--water-hi)}
 .keypad{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.4rem}
 .keypad[hidden]{display:none}
-.side.kp .cfg-btn{display:none}   /* con el teclado abierto se oculta Configuración */
 .keypad button{
   min-height:2.9rem;border:0;border-radius:.6rem;background:#FFFFFF;color:#0B1622;
   font-size:1.6rem;font-weight:900;line-height:1;cursor:pointer;touch-action:manipulation;
@@ -230,7 +229,8 @@ header .intro .sub small{font-size:.8em;font-weight:800}
 .btn-ok{background:var(--water-hi);color:#04101C}
 
 .playing header,.revealed header{display:none}
-.playing .cfg-btn,.revealed .cfg-btn{display:none}
+.playing .cfg-btn,.revealed .cfg-btn{margin-top:.5rem}   /* Configuración siempre visible, abajo y en pequeño */
+.side > .cfg-btn{order:3}
 .playing .controls{margin-block:auto}                       /* en juego: bloque centrado verticalmente */
 .revealed .controls > :not(#btnNew){display:none}            /* con resultado: solo queda Nuevo DESAFÍO */
 .revealed .controls{order:2;margin-top:0}
