@@ -114,11 +114,8 @@ header .intro .sub small{font-size:.8em;font-weight:800}
   flex:1 1 0;min-width:0;display:flex;align-items:center;justify-content:center;
   padding:.1rem 1.9rem .1rem .8rem;color:#0B1622;font-weight:900;font-size:2.375rem;line-height:1.1;white-space:nowrap;
 }
-.disp .ph{display:none;font-size:.8rem;font-weight:800;color:#8197AA;line-height:1.15;white-space:normal;text-align:left;margin-left:.35rem}
+.disp .ph{display:none;font-size:1.5rem;font-weight:800;color:#9AAEC0;line-height:1.1;white-space:nowrap}
 .box.empty .ph{display:block}
-.caret{display:inline-block;flex:none;width:3px;height:1.05em;background:#0B1622;margin:0 1px;visibility:hidden;animation:blink 1s steps(1) infinite}
-.box.empty .caret{height:1.6rem}
-.box.typing .caret{visibility:visible}
 @keyframes blink{50%{opacity:0}}
 .box .pct{position:absolute;right:.85rem;top:50%;transform:translateY(-50%);font-size:1.4rem;color:#4A6378;pointer-events:none}
 .idle .box{opacity:.45}
@@ -232,6 +229,23 @@ header .intro .sub small{font-size:.8em;font-weight:800}
 .btn-sec{background:transparent;color:var(--ink);border:2px solid var(--line)}
 .btn-ok{background:var(--water-hi);color:#04101C}
 
+.playing header,.revealed header{display:none}
+.playing .cfg-btn,.revealed .cfg-btn{display:none}
+.playing .controls{margin-block:auto}                       /* en juego: bloque centrado verticalmente */
+.revealed .controls > :not(#btnNew){display:none}            /* con resultado: solo queda Nuevo DESAFÍO */
+.revealed .controls{order:2;margin-top:0}
+.revealed .result{order:1;margin:auto 0 1rem}
+.revealed #btnNew{margin-top:0}
+.verdict{white-space:nowrap}
+.cards{display:flex;flex-direction:column;gap:.55rem}
+.card{display:flex;justify-content:space-between;align-items:baseline;gap:.5rem;text-align:left;white-space:nowrap;padding:.55rem .8rem;font-size:1rem}
+.card span,.card.white span{display:inline;font-size:1.1em}
+.card b,.card.white b{display:inline;font-size:1.9em;line-height:1.1}
+.card.miss{grid-column:auto}
+.side.tight .card{padding:.35rem .7rem}
+.side.tight .card b,.side.tight .card.white b{font-size:1.6em}
+.side.tight .card span,.side.tight .card.white span{font-size:1em}
+
 @media (prefers-reduced-motion:reduce){
   .mark,.tag{transition:none}
   .bubble{display:none}
@@ -265,7 +279,7 @@ header .intro .sub small{font-size:.8em;font-weight:800}
         <div class="bar"><i id="tBar"></i></div>
       </div>
       <div class="box" id="box">
-        <div class="disp" aria-label="Tu estimación en porcentaje"><span id="val"></span><i class="caret"></i><span class="ph" id="ph"></span></div>
+        <div class="disp" aria-label="Tu estimación en porcentaje"><span id="val"></span><span class="ph" id="ph"></span></div>
         <span class="pct">%</span>
       </div>
       <div class="keypad" id="keypad" hidden>
@@ -643,7 +657,7 @@ header .intro .sub small{font-size:.8em;font-weight:800}
     const p=PREC[cfg.prec];
     $('precText').innerHTML=p.text;
     $('examples').innerHTML='<span class="lbl">Ej:</span> '+p.ex.map(x=>'<b>'+x+'</b>').join('<i>/</i>');
-    $('ph').textContent = cfg.prec===1 ? 'Ingresa número SIN decimal' : 'Ingresa número CON decimal';
+    $('ph').textContent = cfg.prec===1 ? 'Ej: 23' : cfg.prec===0.5 ? 'Ej: 23,5' : 'Ej: 23,8';
     $('kDec').disabled = cfg.prec===1;
     showTime(cfg.time*1000);
   }
@@ -669,16 +683,10 @@ header .intro .sub small{font-size:.8em;font-weight:800}
   const MIN_GAP_REM=1.3;
   function shuffleRefs(){
     intro.style.fontSize=(0.85+Math.random()*0.24).toFixed(3)+'rem';
-    form.style.marginTop=(MIN_GAP_REM+Math.random()*6).toFixed(2)+'rem';   // siempre deja un espacio claro bajo los ejemplos
+    form.style.marginTop='';   // en juego el bloque va centrado verticalmente
     fitTexts();
   }
   function fitSide(){
-    const over=side.scrollHeight-side.clientHeight;
-    if(over>0){
-      const cur=parseFloat(getComputedStyle(form).marginTop)||0;
-      const minGap=MIN_GAP_REM*parseFloat(getComputedStyle(document.documentElement).fontSize);
-      form.style.marginTop=Math.max(minGap,cur-over)+'px';
-    }
     if(side.scrollHeight>side.clientHeight) side.classList.add('tight');
     if(side.scrollHeight>side.clientHeight) side.scrollTop=side.scrollHeight;
   }
@@ -724,6 +732,7 @@ header .intro .sub small{font-size:.8em;font-weight:800}
   function setState(s){
     state=s;
     app.classList.toggle('idle', s==='idle');
+    app.classList.toggle('playing', s==='playing');
     app.classList.toggle('revealed', s==='revealed');
   }
   function resetVisuals(){
@@ -782,10 +791,11 @@ header .intro .sub small{font-size:.8em;font-weight:800}
     hiTag.style.bottom=hiB+'px'; loTag.style.bottom=loB+'px';
   }
 
+  // Cada dato del resultado en una sola línea: si no cabe, se achica la letra de esa línea
   function fitNumbers(){
-    ['rGuess','rReal'].forEach(id=>{
-      const e=$(id); e.style.fontSize=''; let fs=parseFloat(getComputedStyle(e).fontSize);
-      while(e.scrollWidth>e.clientWidth && fs>10){ fs-=1; e.style.fontSize=fs+'px'; }
+    [$('verdict'), ...document.querySelectorAll('.cards .card')].forEach(e=>{
+      e.style.fontSize=''; let fs=parseFloat(getComputedStyle(e).fontSize);
+      while(e.scrollWidth>e.clientWidth && fs>7){ fs-=0.5; e.style.fontSize=fs+'px'; }
     });
   }
 
